@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pharmapotal - Pharmacy Access</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3148/3148875.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7c3aed',
+                        secondary: '#06b6d4',
+                        medical: '#22c55e',
+                        dark: '#111827',
+                        light: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .card-shadow {
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 50%, #22c55e 100%);
+        }
+        .medical-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .form-container {
+            transition: all 0.3s ease;
+        }
+        .toggle-form {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .toggle-form.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-box:hover {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
+        .tab-active {
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+        .tab-inactive {
+            color: #6b7280;
+        }
+        .terms-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .terms-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .countdown {
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+        }
+        .verified-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            border-radius: 9999px;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center medical-pattern p-4">
+    <div class="absolute top-0 left-0 w-full h-1/2 gradient-bg rounded-b-3xl z-0"></div>
+    
+    <div class="max-w-5xl w-full mx-auto z-10">
+        <div class="flex flex-col md:flex-row rounded-2xl overflow-hidden card-shadow">
+            <!-- Left side - Branding -->
+            <aside class="md:w-2/5 bg-gradient-to-br from-primary to-medical text-white p-10 flex flex-col">
+                <div>
+                    <div class="flex items-center mb-8">
+                        <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mr-3">
+                            <i class="fas fa-pills text-2xl"></i>
+                        </div>
+                        <h1 class="text-2xl font-bold">pharmapotal</h1>
+                    </div>
+                    <h2 class="text-3xl font-bold mt-6 mb-3">Welcome</h2>
+                    <p class="text-white/90">Manage inventory, process orders, and serve customers with our dedicated portal.</p>
+                </div>
+                
+                <nav class="mt-10 space-y-2">
+                    <button id="navLogin" class="w-full text-left py-3 px-4 rounded-lg bg-white/10 hover:bg-white/20 transition flex items-center justify-between">
+                        <span><i class="fas fa-sign-in-alt mr-2"></i> Login</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button id="navRegister" class="w-full text-left py-3 px-4 rounded-lg bg-white/10 hover:bg-white/20 transition flex items-center justify-between">
+                        <span><i class="fas fa-user-plus mr-2"></i> Register</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <hr class="border-white/20 my-4">
+                    <div class="space-y-2 text-white/80 text-sm">
+                        <div class="flex items-center"><i class="fas fa-shield-alt w-6"></i> HIPAA Compliant & Secure</div>
+                        <div class="flex items-center"><i class="fas fa-bolt w-6"></i> Fast Prescription Management</div>
+                        <div class="flex items-center"><i class="fas fa-chart-line w-6"></i> Business Performance</div>
+                    </div>
+                </nav>
+            </aside>
+            
+            <!-- Right side - Forms -->
+            <div class="md:w-3/5 bg-white p-10">
+                <!-- Toggle Buttons -->
+                <div class="flex mb-8 border-b border-gray-200">
+                    <button id="loginTab" class="py-3 px-6 font-medium tab-active">Login</button>
+                    <button id="registerTab" class="py-3 px-6 font-medium tab-inactive">Register</button>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="loginForm" class="toggle-form active space-y-6">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-dark mb-2">Pharmacy Login</h2>
+                        <p class="text-gray-600">Use demo credentials to continue</p>
+                    </div>
+                    
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email or Pharmacy ID</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-gray-400"></i>
+                            </div>
+                            <input type="text" id="email" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus-border-transparent outline-none transition" placeholder="Enter your email or pharmacy ID (demo)" required>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-gray-400"></i>
+                            </div>
+                            <input type="password" id="password" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus-border-transparent outline-none transition" placeholder="Enter your password (demo)" required>
+                            <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" id="togglePassword">
+                                <i class="fas fa-eye-slash text-gray-400"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="remember" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="remember" class="ml-2 block text-sm text-gray-700">Remember me</label>
+                        </div>
+                        
+                        <a href="#" class="text-sm text-primary hover:text-secondary font-medium">Forgot password?</a>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-primary hover:bg-secondary text-white py-3 px-4 rounded-lg font-medium transition duration-300 transform hover:-translate-y-1">Sign In</button>
+                    <div id="loginStatus" class="text-sm mt-2"></div>
+                </form>
+                
+                <!-- Registration Form -->
+                <form id="registerForm" class="toggle-form">
+                    <!-- Progress Bar -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="text-sm font-medium text-primary">Step <span id="current-step">1</span> of 3</div>
+                            <div class="text-sm font-medium text-gray-500"><span id="percent-complete">33</span>% Complete</div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="progress-bar" class="bg-medical h-2.5 rounded-full" style="width: 33%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 1: Basic Information -->
+                    <div class="step active" id="step-1">
+                        <h2 class="text-2xl font-bold text-dark mb-6">Basic Information</h2>
+                        <div id="step1Status" class="text-sm mb-4"></div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="pharmacyName" class="block text-sm font-medium text-gray-700 mb-1">Pharmacy Name *</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-store text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="pharmacyName" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Your pharmacy name" required>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="ownerName" class="block text-sm font-medium text-gray-700 mb-1">Owner/Manager Name *</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-user-tie text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="ownerName" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Full name" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="regEmail" class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-gray-400"></i>
+                                </div>
+                                <input type="email" id="regEmail" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="your@email.com" required>
+                                <button type="button" id="sendEmailCode" class="absolute right-2 top-2 bg-gray-100 hover:bg-gray-200 text-xs py-1 px-2 rounded">
+                                    Verify
+                                </button>
+                            </div>
+                            <div id="emailCodeSection" class="mt-2 hidden">
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" id="emailCode" class="w-32 rounded-lg border-gray-300 bg-gray-50 py-2 px-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Enter code" maxlength="6">
+                                    <button type="button" id="verifyEmailCode" class="bg-medical hover:bg-green-600 text-white text-xs py-2 px-3 rounded">
+                                        Verify Code
+                                    </button>
+                                    <span id="emailTimer" class="text-xs text-gray-500 hidden">Resend in <span class="countdown">60</span>s</span>
+                                </div>
+                                <div id="emailCodeStatus" class="text-xs mt-1"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                                <div class="flex">
+                                    <select id="countryCode" class="w-1/4 rounded-l-lg border-gray-300 bg-gray-50 py-3 px-2 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition">
+                                        <option value="+1">+1 (US)</option>
+                                        <option value="+91" selected>+91 (IN)</option>
+                                        <option value="+44">+44 (UK)</option>
+                                        <option value="+61">+61 (AU)</option>
+                                        <option value="+86">+86 (CN)</option>
+                                    </select>
+                                    <div class="relative w-3/4">
+                                        <input type="tel" id="phone" class="w-full rounded-r-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Phone number" required>
+                                        <button type="button" id="sendSmsCode" class="absolute right-2 top-2 bg-gray-100 hover:bg-gray-200 text-xs py-1 px-2 rounded">
+                                            Verify
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="smsCodeSection" class="mt-2 hidden">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" id="smsCode" class="w-32 rounded-lg border-gray-300 bg-gray-50 py-2 px-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Enter code" maxlength="6">
+                                        <button type="button" id="verifySmsCode" class="bg-medical hover:bg-green-600 text-white text-xs py-2 px-3 rounded">
+                                            Verify Code
+                                        </button>
+                                        <span id="smsTimer" class="text-xs text-gray-500 hidden">Resend in <span class="countdown">60</span>s</span>
+                                    </div>
+                                    <div id="smsCodeStatus" class="text-xs mt-1"></div>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="operatingHours" class="block text-sm font-medium text-gray-700 mb-1">Operating Hours *</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="text-xs text-gray-500">From</label>
+                                        <input type="time" id="openTime" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-xs text-gray-500">To</label>
+                                        <input type="time" id="closeTime" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" required>
+                                    </div>
+                                </div>
+                                <div id="timeError" class="text-xs text-red-600 mt-1 hidden">Closing time must be after opening time</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Full Address *</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-map-marker-alt text-gray-400"></i>
+                                </div>
+                                <input type="text" id="address" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Street address" required>
+                                <button type="button" id="detectLocation" class="absolute right-2 top-2 bg-gray-100 hover:bg-gray-200 p-2 rounded-lg">
+                                    <i class="fas fa-location-arrow"></i>
+                                </button>
+                            </div>
+                            <div id="locationStatus" class="text-xs mt-1"></div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div>
+                                <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                                <input type="text" id="city" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="City" required>
+                            </div>
+                            
+                            <div>
+                                <label for="state" class="block text-sm font-medium text-gray-700 mb-1">State *</label>
+                                <input type="text" id="state" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="State" required>
+                            </div>
+                            
+                            <div>
+                                <label for="pincode" class="block text-sm font-medium text-gray-700 mb-1">PIN Code *</label>
+                                <input type="text" id="pincode" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="ZIP/PIN code" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="landmark" class="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
+                            <input type="text" id="landmark" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Nearby landmark">
+                        </div>
+                        
+                        <div class="flex justify-between mt-10">
+                            <div></div>
+                            <button type="button" class="next-step bg-primary hover:bg-secondary text-white py-3 px-8 rounded-lg font-medium transition duration-300">
+                                Next <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Business Details & Documents -->
+                    <div class="step" id="step-2">
+                        <h2 class="text-2xl font-bold text-dark mb-6">Business Details & Documents</h2>
+                        <div id="step2Status" class="text-sm mb-4"></div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="gstNumber" class="block text-sm font-medium text-gray-700 mb-1">GST Number *</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-receipt text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="gstNumber" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="GSTIN" required>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="drugLicense" class="block text-sm font-medium text-gray-700 mb-1">Drug License Number *</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-id-card text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="drugLicense" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="License number" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="licenseAuthority" class="block text-sm font-medium text-gray-700 mb-1">Licensing Authority *</label>
+                                <input type="text" id="licenseAuthority" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Issuing authority" required>
+                            </div>
+                            
+                            <div>
+                                <label for="licenseValidUntil" class="block text-sm font-medium text-gray-700 mb-1">License Valid Until *</label>
+                                <input type="date" id="licenseValidUntil" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label for="healthAuthorityId" class="block text-sm font-medium text-gray-700 mb-1">Health Authority Registration ID</label>
+                            <input type="text" id="healthAuthorityId" class="w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Registration ID">
+                        </div>
+                        
+                        <h3 class="text-lg font-medium text-dark mb-4">Required Documents</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="upload-box" onclick="document.getElementById('drugLicenseFile').click()">
+                                <i class="fas fa-file-medical text-2xl text-medical mb-2"></i>
+                                <h3 class="font-medium text-dark mb-1">Drug License *</h3>
+                                <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 5MB)</p>
+                                <input type="file" id="drugLicenseFile" class="hidden" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div id="drugLicenseFileName" class="text-xs mt-2 text-medical hidden"></div>
+                            </div>
+                            
+                            <div class="upload-box" onclick="document.getElementById('gstCertificateFile').click()">
+                                <i class="fas fa-file-invoice-dollar text-2xl text-medical mb-2"></i>
+                                <h3 class="font-medium text-dark mb-1">GST Certificate *</h3>
+                                <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 5MB)</p>
+                                <input type="file" id="gstCertificateFile" class="hidden" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div id="gstCertificateFileName" class="text-xs mt-2 text-medical hidden"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="upload-box" onclick="document.getElementById('tradeLicenseFile').click()">
+                                <i class="fas fa-file-contract text-2xl text-medical mb-2"></i>
+                                <h3 class="font-medium text-dark mb-1">Trade License *</h3>
+                                <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 5MB)</p>
+                                <input type="file" id="tradeLicenseFile" class="hidden" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div id="tradeLicenseFileName" class="text-xs mt-2 text-medical hidden"></div>
+                            </div>
+                            
+                            <div class="upload-box" onclick="document.getElementById('pharmacistLicenseFile').click()">
+                                <i class="fas fa-file-medical-alt text-2xl text-medical mb-2"></i>
+                                <h3 class="font-medium text-dark mb-1">Pharmacist Registration *</h3>
+                                <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 5MB)</p>
+                                <input type="file" id="pharmacistLicenseFile" class="hidden" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div id="pharmacistLicenseFileName" class="text-xs mt-2 text-medical hidden"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="upload-box" onclick="document.getElementById('panCardFile').click()">
+                                <i class="fas fa-file-alt text-2xl text-medical mb-2"></i>
+                                <h3 class="font-medium text-dark mb-1">PAN Card *</h3>
+                                <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 5MB)</p>
+                                <input type="file" id="panCardFile" class="hidden" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div id="panCardFileName" class="text-xs mt-2 text-medical hidden"></div>
+                            </div>
+                            
+                            <div class="upload-box" onclick="document.getElementById('addressProofFile').click()">
+                                <i class="fas fa-home text-2xl text-medical mb-2"></i>
+                                <h3 class="font-medium text-dark mb-1">Address Proof *</h3>
+                                <p class="text-xs text-gray-500">PDF, JPG or PNG (Max 5MB)</p>
+                                <input type="file" id="addressProofFile" class="hidden" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <div id="addressProofFileName" class="text-xs mt-2 text-medical hidden"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between mt-10">
+                            <button type="button" class="prev-step bg-gray-200 hover:bg-gray-300 text-dark py-3 px-8 rounded-lg font-medium transition duration-300">
+                                <i class="fas fa-arrow-left mr-2"></i> Back
+                            </button>
+                            <button type="button" class="next-step bg-primary hover:bg-secondary text-white py-3 px-8 rounded-lg font-medium transition duration-300">
+                                Next <i class="fas fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: Account Setup & Terms -->
+                    <div class="step" id="step-3">
+                        <h2 class="text-2xl font-bold text-dark mb-6">Account Setup & Terms</h2>
+                        <div id="step3Status" class="text-sm mb-4"></div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label for="regPassword" class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-lock text-gray-400"></i>
+                                    </div>
+                                    <input type="password" id="regPassword" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Create password" required>
+                                    <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center toggle-password">
+                                        <i class="fas fa-eye-slash text-gray-400"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-lock text-gray-400"></i>
+                                    </div>
+                                    <input type="password" id="confirmPassword" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition" placeholder="Confirm password" required>
+                                    <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center toggle-password">
+                                        <i class="fas fa-eye-slash text-gray-400"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <div class="flex items-start">
+                                <input type="checkbox" id="terms" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mt-1" required>
+                                <label for="terms" class="ml-2 block text-sm text-gray-700">I have read and agree to the <a href="#" class="text-primary hover:text-secondary show-terms">Terms of Service</a> and <a href="#" class="text-primary hover:text-secondary show-policy">Privacy Policy</a></label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <div class="flex items-start">
+                                <input type="checkbox" id="privacy" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded mt-1" required>
+                                <label for="privacy" class="ml-2 block text-sm text-gray-700">I understand that my information will be used for verification purposes and will be kept secure according to healthcare regulations</label>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between mt-10">
+                            <button type="button" class="prev-step bg-gray-200 hover:bg-gray-300 text-dark py-3 px-8 rounded-lg font-medium transition duration-300">
+                                <i class="fas fa-arrow-left mr-2"></i> Back
+                            </button>
+                            <button type="submit" class="bg-medical hover:bg-green-600 text-white py-3 px-8 rounded-lg font-medium transition duration-300">
+                                Complete Registration <i class="fas fa-check ml-2"></i>
+                            </button>
+                        </div>
+                        <div id="registerStatus" class="text-sm mt-4"></div>
+                    </div>
+                </form>
+                
+                <div class="mt-8 text-center text-sm text-gray-600">
+                    <p>Need help? Contact our support at <a href="mailto:support@pharmaportal.com" class="text-primary hover:text-secondary">support@pharmaportal.com</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-8 text-center text-sm text-white">
+            <p>© 2023 PharmaPortal. All rights reserved. Terms of Use & Privacy Policy</p>
+        </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div id="termsModal" class="terms-modal">
+        <div class="terms-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="modalTitle">Terms of Service</h3>
+                <button class="close-modal text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="text-gray-700">
+                <!-- Content will be loaded here -->
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button class="close-modal bg-primary text-white py-2 px-4 rounded-lg">Back</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store verification codes for simulation
+        let emailVerificationCode = '';
+        let smsVerificationCode = '';
+        let emailVerified = false;
+        let smsVerified = false;
+        let emailTimerInterval = null;
+        let smsTimerInterval = null;
+
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        });
+
+        // Toggle password visibility for registration form
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.parentElement.querySelector('input');
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            });
+        });
+
+        // Form toggle functionality + sidebar nav
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const navLogin = document.getElementById('navLogin');
+        const navRegister = document.getElementById('navRegister');
+        
+        function activateLogin(){
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+            loginTab.classList.add('tab-active');
+            loginTab.classList.remove('tab-inactive');
+            registerTab.classList.add('tab-inactive');
+            registerTab.classList.remove('tab-active');
+        }
+        function activateRegister(){
+            registerForm.classList.add('active');
+            loginForm.classList.remove('active');
+            registerTab.classList.add('tab-active');
+            registerTab.classList.remove('tab-inactive');
+            loginTab.classList.add('tab-inactive');
+            loginTab.classList.remove('tab-active');
+        }
+        
+        loginTab.addEventListener('click', activateLogin);
+        registerTab.addEventListener('click', activateRegister);
+        if (navLogin) navLogin.addEventListener('click', activateLogin);
+        if (navRegister) navRegister.addEventListener('click', activateRegister);
+        
+        registerTab.addEventListener('click', () => {
+            registerForm.classList.add('active');
+            loginForm.classList.remove('active');
+            registerTab.classList.add('tab-active');
+            registerTab.classList.remove('tab-inactive');
+            loginTab.classList.add('tab-inactive');
+            loginTab.classList.remove('tab-active');
+        });
+
+        // Multi-step form functionality
+        const steps = document.querySelectorAll('.step');
+        const nextButtons = document.querySelectorAll('.next-step');
+        const prevButtons = document.querySelectorAll('.prev-step');
+        const progressBar = document.getElementById('progress-bar');
+        const currentStepElement = document.getElementById('current-step');
+        const percentCompleteElement = document.getElementById('percent-complete');
+        
+        let currentStep = 1;
+        const totalSteps = steps.length;
+        
+        // Update progress
+        function updateProgress() {
+            const percentComplete = (currentStep / totalSteps) * 100;
+            progressBar.style.width = `${percentComplete}%`;
+            currentStepElement.textContent = currentStep;
+            percentCompleteElement.textContent = Math.round(percentComplete);
+        }
+        
+        // Next button click handler
+        nextButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Validate current step before proceeding
+                if (validateStep(currentStep)) {
+                    steps[currentStep - 1].classList.remove('active');
+                    currentStep++;
+                    steps[currentStep - 1].classList.add('active');
+                    updateProgress();
+                }
+            });
+        });
+        
+        // Previous button click handler
+        prevButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                steps[currentStep - 1].classList.remove('active');
+                currentStep--;
+                steps[currentStep - 1].classList.add('active');
+                updateProgress();
+            });
+        });
+        
+        // Helpers for inline status
+        function setStatus(elId, message, type) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (!message) {
+                el.textContent = '';
+                el.className = '';
+                return;
+            }
+            el.textContent = message;
+            el.className = `text-xs ${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-gray-600'}`;
+        }
+
+        // Form validation for each step
+        function validateStep(step) {
+            let isValid = true;
+            
+            if (step === 1) {
+                const requiredFields = [
+                    'pharmacyName', 'ownerName', 'regEmail', 'phone', 
+                    'openTime', 'closeTime', 'address', 'city', 'state', 'pincode'
+                ];
+                
+                requiredFields.forEach(field => {
+                    const element = document.getElementById(field);
+                    if (!element.value.trim()) {
+                        element.classList.add('border-red-500');
+                        isValid = false;
+                    } else {
+                        element.classList.remove('border-red-500');
+                    }
+                });
+                
+                // Validate email format
+                const email = document.getElementById('regEmail');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email.value)) {
+                    email.classList.add('border-red-500');
+                    isValid = false;
+                }
+                
+                // Validate operating hours
+                const openTime = document.getElementById('openTime').value;
+                const closeTime = document.getElementById('closeTime').value;
+                if (openTime && closeTime && openTime >= closeTime) {
+                    document.getElementById('timeError').classList.remove('hidden');
+                    isValid = false;
+                } else {
+                    document.getElementById('timeError').classList.add('hidden');
+                }
+                
+                // Check if email is verified
+                if (!emailVerified) {
+                    setStatus('step1Status', 'Please verify your email address before proceeding.', 'error');
+                    isValid = false;
+                }
+                
+                // Check if phone is verified
+                if (!smsVerified) {
+                    setStatus('step1Status', 'Please verify your phone number before proceeding.', 'error');
+                    isValid = false;
+                }
+            }
+            
+            if (step === 2) {
+                const requiredFields = [
+                    'gstNumber', 'drugLicense', 'licenseAuthority', 'licenseValidUntil'
+                ];
+                
+                requiredFields.forEach(field => {
+                    const element = document.getElementById(field);
+                    if (!element.value.trim()) {
+                        element.classList.add('border-red-500');
+                        isValid = false;
+                    } else {
+                        element.classList.remove('border-red-500');
+                    }
+                });
+                
+                // Validate file uploads
+                const requiredFiles = [
+                    'drugLicenseFile', 'gstCertificateFile', 'tradeLicenseFile', 
+                    'pharmacistLicenseFile', 'panCardFile', 'addressProofFile'
+                ];
+                
+                requiredFiles.forEach(file => {
+                    const element = document.getElementById(file);
+                    if (!element.files.length) {
+                        isValid = false;
+                        // Highlight the upload box
+                        element.parentElement.classList.add('border-red-500');
+                    } else {
+                        element.parentElement.classList.remove('border-red-500');
+                    }
+                });
+            }
+            
+            if (step === 3) {
+                const password = document.getElementById('regPassword');
+                const confirmPassword = document.getElementById('confirmPassword');
+                const terms = document.getElementById('terms');
+                const privacy = document.getElementById('privacy');
+                
+                if (!password.value) {
+                    password.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    password.classList.remove('border-red-500');
+                }
+                
+                if (!confirmPassword.value || password.value !== confirmPassword.value) {
+                    confirmPassword.classList.add('border-red-500');
+                    isValid = false;
+                } else {
+                    confirmPassword.classList.remove('border-red-500');
+                }
+                
+                if (!terms.checked) {
+                    terms.parentElement.classList.add('text-red-500');
+                    isValid = false;
+                } else {
+                    terms.parentElement.classList.remove('text-red-500');
+                }
+                
+                if (!privacy.checked) {
+                    privacy.parentElement.classList.add('text-red-500');
+                    isValid = false;
+                } else {
+                    privacy.parentElement.classList.remove('text-red-500');
+                }
+            }
+            
+            if (!isValid) {
+                setStatus(`step${step}Status`, 'Please fill in all required fields correctly.', 'error');
+            } else {
+                setStatus(`step${step}Status`, '', '');
+            }
+            
+            return isValid;
+        }
+        
+        // Form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const btn = this.querySelector('button[type="submit"]');
+            if (!email || !password) {
+                setStatus('loginStatus', 'Please fill in all required fields', 'error');
+                return;
+            }
+
+            // call backend auth endpoint instead of demo logic
+            setStatus('loginStatus', 'Signing in...', 'info');
+            btn.textContent = 'Signing in...';
+            btn.disabled = true;
+
+            try {
+              const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+              });
+              const j = await res.json().catch(() => ({}));
+              if (res.ok && j.ok) {
+                setStatus('loginStatus', 'Login successful! Redirecting...', 'success');
+                // redirect to home
+                setTimeout(() => { window.location.href = '/home'; }, 600);
+              } else {
+                setStatus('loginStatus', j.error || 'Invalid credentials', 'error');
+                btn.textContent = 'Sign In';
+                btn.disabled = false;
+              }
+            } catch (err) {
+              console.error(err);
+              setStatus('loginStatus', 'Network error. Try again.', 'error');
+              btn.textContent = 'Sign In';
+              btn.disabled = false;
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (validateStep(3)) {
+                const btn = this.querySelector('button[type="submit"]');
+                btn.textContent = 'Creating account...';
+                btn.disabled = true;
+                setStatus('registerStatus', 'Submitting registration...', 'info');
+                setTimeout(() => {
+                    setStatus('registerStatus', 'Registration submitted! Check your email to verify your account.', 'success');
+                    btn.textContent = 'Complete Registration';
+                    btn.disabled = false;
+                    // Switch back to login form
+                    loginTab.click();
+                }, 1500);
+            }
+        });
+
+        // File upload visual feedback
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const box = this.parentElement;
+                    box.style.borderColor = '#10b981';
+                    box.style.backgroundColor = '#f0fdf4';
+                    
+                    // Show file name
+                    const fileNameElement = document.getElementById(this.id + 'Name');
+                    if (fileNameElement) {
+                        fileNameElement.textContent = this.files[0].name;
+                        fileNameElement.classList.remove('hidden');
+                    }
+                }
+            });
+        });
+
+        // Location detection
+        document.getElementById('detectLocation').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                navigator.geolocation.getCurrentPosition(
+                    async function(position) {
+                        try {
+                            const { latitude, longitude } = position.coords;
+                            // Use Nominatim (OpenStreetMap) for reverse geocoding as a free example
+                            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                            const data = await res.json();
+                            const addr = data.address || {};
+                            document.getElementById('address').value = data.display_name || '';
+                            document.getElementById('city').value = addr.city || addr.town || addr.village || '';
+                            document.getElementById('state').value = addr.state || '';
+                            document.getElementById('pincode').value = addr.postcode || '';
+                            setStatus('locationStatus', 'Location detected and address filled! Please verify the details.', 'success');
+                        } catch (err) {
+                            setStatus('locationStatus', 'Unable to detect location. Please enter your address manually.', 'error');
+                        } finally {
+                            document.getElementById('detectLocation').innerHTML = '<i class="fas fa-location-arrow"></i>';
+                        }
+                    },
+                    function(error) {
+                        document.getElementById('detectLocation').innerHTML = '<i class="fas fa-location-arrow"></i>';
+                        setStatus('locationStatus', 'Geolocation failed. Please enter your address manually.', 'error');
+                    }
+                );
+            } else {
+                setStatus('locationStatus', 'Geolocation is not supported by this browser.', 'error');
+            }
+        });
+
+        // Email verification
+        document.getElementById('sendEmailCode').addEventListener('click', async function() {
+            const email = document.getElementById('regEmail').value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!emailRegex.test(email)) {
+                setStatus('emailCodeStatus', 'Please enter a valid email address.', 'error');
+                return;
+            }
+            
+            // Show code section
+            document.getElementById('emailCodeSection').classList.remove('hidden');
+            
+            // Call backend to send email. Replace URL with your API.
+            // Example expects JSON: { success: true } and server to handle sending OTP.
+            setStatus('emailCodeStatus', 'Sending verification code...', 'info');
+            try {
+                const resp = await fetch('/api/send-email-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const result = await resp.json().catch(() => ({}));
+                if (!resp.ok || result.success !== true) throw new Error('Failed');
+                setStatus('emailCodeStatus', 'Verification code sent. Please check your email.', 'success');
+            } catch (e) {
+                // Fallback to local generation if backend not available (dev mode)
+                emailVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                setStatus('emailCodeStatus', `Dev mode: code ${emailVerificationCode} (replace with backend)`, 'info');
+            }
+            
+            // Start countdown timer
+            startCountdown('emailTimer', 60, function() {
+                document.getElementById('sendEmailCode').disabled = false;
+                document.getElementById('sendEmailCode').textContent = 'Resend';
+            });
+            
+            // Disable button during countdown
+            this.disabled = true;
+            this.textContent = 'Sending...';
+        });
+
+        // Verify email code
+        document.getElementById('verifyEmailCode').addEventListener('click', function() {
+            const enteredCode = document.getElementById('emailCode').value;
+            
+            if (enteredCode === emailVerificationCode) {
+                emailVerified = true;
+                document.getElementById('emailCodeStatus').textContent = 'Email verified successfully!';
+                document.getElementById('emailCodeStatus').className = 'text-xs mt-1 text-green-600';
+                
+                // Add checkmark icon and disable further verification
+                const emailField = document.getElementById('regEmail');
+                emailField.classList.add('border-green-500');
+                
+                // Hide the verification section and stop timer
+                document.getElementById('emailCodeSection').classList.add('hidden');
+                document.getElementById('sendEmailCode').style.display = 'none';
+                
+                // Add verified badge
+                const verifiedBadge = document.createElement('span');
+                verifiedBadge.className = 'verified-badge';
+                verifiedBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Verified';
+                emailField.parentNode.appendChild(verifiedBadge);
+                
+                // Clear any existing timer
+                if (emailTimerInterval) {
+                    clearInterval(emailTimerInterval);
+                    document.getElementById('emailTimer').classList.add('hidden');
+                }
+            } else {
+                document.getElementById('emailCodeStatus').textContent = 'Invalid verification code. Please try again.';
+                document.getElementById('emailCodeStatus').className = 'text-xs mt-1 text-red-600';
+            }
+        });
+
+        // SMS verification
+        document.getElementById('sendSmsCode').addEventListener('click', async function() {
+            const phone = document.getElementById('phone').value;
+            const countryCode = document.getElementById('countryCode').value;
+            
+            if (!phone) {
+                setStatus('smsCodeStatus', 'Please enter a phone number.', 'error');
+                return;
+            }
+            
+            // Show code section
+            document.getElementById('smsCodeSection').classList.remove('hidden');
+            
+            // Call backend to send SMS. Replace URL with your API.
+            // Example expects JSON { success: true }
+            setStatus('smsCodeStatus', 'Sending verification code...', 'info');
+            try {
+                const resp = await fetch('/api/send-sms-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: `${countryCode}${phone}` })
+                });
+                const result = await resp.json().catch(() => ({}));
+                if (!resp.ok || result.success !== true) throw new Error('Failed');
+                setStatus('smsCodeStatus', 'Verification code sent. Please check your phone.', 'success');
+            } catch (e) {
+                // Fallback to local generation if backend not available (dev mode)
+                smsVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+                setStatus('smsCodeStatus', `Dev mode: code ${smsVerificationCode} (replace with backend)`, 'info');
+            }
+            
+            // Start countdown timer
+            startCountdown('smsTimer', 60, function() {
+                document.getElementById('sendSmsCode').disabled = false;
+                document.getElementById('sendSmsCode').textContent = 'Resend';
+            });
+            
+            // Disable button during countdown
+            this.disabled = true;
+            this.textContent = 'Sending...';
+        });
+
+        // Verify SMS code
+        document.getElementById('verifySmsCode').addEventListener('click', function() {
+            const enteredCode = document.getElementById('smsCode').value;
+            
+            if (enteredCode === smsVerificationCode) {
+                smsVerified = true;
+                document.getElementById('smsCodeStatus').textContent = 'Phone number verified successfully!';
+                document.getElementById('smsCodeStatus').className = 'text-xs mt-1 text-green-600';
+                
+                // Add checkmark visual feedback and disable further verification
+                const phoneField = document.getElementById('phone');
+                phoneField.classList.add('border-green-500');
+                
+                // Hide the verification section and stop timer
+                document.getElementById('smsCodeSection').classList.add('hidden');
+                document.getElementById('sendSmsCode').style.display = 'none';
+                
+                // Add verified badge
+                const verifiedBadge = document.createElement('span');
+                verifiedBadge.className = 'verified-badge';
+                verifiedBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Verified';
+                phoneField.parentNode.appendChild(verifiedBadge);
+                
+                // Clear any existing timer
+                if (smsTimerInterval) {
+                    clearInterval(smsTimerInterval);
+                    document.getElementById('smsTimer').classList.add('hidden');
+                }
+            } else {
+                document.getElementById('smsCodeStatus').textContent = 'Invalid verification code. Please try again.';
+                document.getElementById('smsCodeStatus').className = 'text-xs mt-1 text-red-600';
+            }
+        });
+
+        // Countdown timer function
+        function startCountdown(timerId, seconds, callback) {
+            const timerElement = document.getElementById(timerId);
+            const countdownElement = timerElement.querySelector('.countdown');
+            
+            timerElement.classList.remove('hidden');
+            
+            let countdown = seconds;
+            countdownElement.textContent = countdown;
+            
+            // Clear any existing interval
+            if (timerId === 'emailTimer' && emailTimerInterval) {
+                clearInterval(emailTimerInterval);
+            }
+            if (timerId === 'smsTimer' && smsTimerInterval) {
+                clearInterval(smsTimerInterval);
+            }
+            
+            const interval = setInterval(function() {
+                countdown--;
+                countdownElement.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(interval);
+                    timerElement.classList.add('hidden');
+                    if (callback) callback();
+                }
+            }, 1000);
+            
+            // Store the interval ID
+            if (timerId === 'emailTimer') {
+                emailTimerInterval = interval;
+            } else if (timerId === 'smsTimer') {
+                smsTimerInterval = interval;
+            }
+        }
+
+        // Validate operating hours
+        document.getElementById('openTime').addEventListener('change', validateOperatingHours);
+        document.getElementById('closeTime').addEventListener('change', validateOperatingHours);
+
+        function validateOperatingHours() {
+            const openTime = document.getElementById('openTime').value;
+            const closeTime = document.getElementById('closeTime').value;
+            const timeError = document.getElementById('timeError');
+            
+            if (openTime && closeTime && openTime >= closeTime) {
+                timeError.classList.remove('hidden');
+                return false;
+            } else {
+                timeError.classList.add('hidden');
+                return true;
+            }
+        }
+
+        // Terms and Policy modals
+        const termsModal = document.getElementById('termsModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        
+        document.querySelectorAll('.show-terms').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalTitle.textContent = 'Terms of Service';
+                modalContent.innerHTML = `
+                    <h4 class="font-bold mb-2">1. Acceptance of Terms</h4>
+                    <p class="mb-4">By accessing and using PharmaPortal, you accept and agree to be bound by the terms and provision of this agreement.</p>
+                    
+                    <h4 class="font-bold mb-2">2. Use License</h4>
+                    <p class="mb-4">Permission is granted to use PharmaPortal for pharmacy management purposes. This is the grant of a license, not a transfer of title.</p>
+                    
+                    <h4 class="font-bold mb-2">3. Account Responsibility</h4>
+                    <p class="mb-4">You are responsible for maintaining the confidentiality of your account and password and for restricting access to your computer.</p>
+                    
+                    <h4 class="font-bold mb-2">4. Healthcare Compliance</h4>
+                    <p class="mb-4">You agree to comply with all applicable healthcare regulations including HIPAA requirements for patient data protection.</p>
+                    
+                    <h4 class="font-bold mb-2">5. Governing Law</h4>
+                    <p>Any claim relating to PharmaPortal shall be governed by the laws of the State of California without regard to its conflict of law provisions.</p>
+                `;
+                termsModal.style.display = 'flex';
+            });
+        });
+        
+        document.querySelectorAll('.show-policy').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                modalTitle.textContent = 'Privacy Policy';
+                modalContent.innerHTML = `
+                    <h4 class="font-bold mb-2">1. Information Collection</h4>
+                    <p class="mb-4">We collect personal information such as name, email address, and pharmacy details when you register for our service.</p>
+                    
+                    <h4 class="font-bold mb-2">2. Use of Information</h4>
+                    <p class="mb-4">Your information is used to provide and improve our services, communicate with you, and ensure regulatory compliance.</p>
+                    
+                    <h4 class="font-bold mb-2">3. Data Protection</h4>
+                    <p class="mb-4">We implement security measures to protect your information, including encryption and secure servers.</p>
+                    
+                    <h4 class="font-bold mb-2">4. Information Sharing</h4>
+                    <p class="mb-4">We do not sell your personal information. We may share information with regulatory authorities as required by law.</p>
+                    
+                    <h4 class="font-bold mb-2">5. Your Rights</h4>
+                    <p>You have the right to access, correct, or delete your personal information stored in our systems.</p>
+                `;
+                termsModal.style.display = 'flex';
+            });
+        });
+        
+        document.querySelectorAll('.close-modal').forEach(button => {
+            button.addEventListener('click', function() {
+                termsModal.style.display = 'none';
+            });
+        });
+
+        // Add animation to the buttons on hover
+        const buttons = document.querySelectorAll('button[type="submit"]');
+        buttons.forEach(button => {
+            button.addEventListener('mouseover', function() {
+                this.classList.add('shadow-lg');
+            });
+            button.addEventListener('mouseout', function() {
+                this.classList.remove('shadow-lg');
+            });
+        });
+
+        // Set default time values
+        document.getElementById('openTime').value = '09:00';
+        document.getElementById('closeTime').value = '18:00';
+    </script>
+</body>
+</html>

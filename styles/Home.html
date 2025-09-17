@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PharmaPortal Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary: #0ea5e9;
+      --accent: #22d3ee;
+      --light: #f0f9ff;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --dark: #1e293b;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      min-height: 100vh;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+    
+    .dashboard-card {
+      position: relative;
+      padding: 1.5rem;
+      color: white;
+      cursor: pointer;
+    }
+    
+    .dashboard-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.5);
+    }
+    
+    .dashboard-card i {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.9;
+    }
+    
+    #totalMedicinesBtn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    }
+    
+    #expiringSoonBtn {
+      background: linear-gradient(135deg, var(--warning) 0%, #f97316 100%);
+    }
+    
+    #lowStockBtn {
+      background: linear-gradient(135deg, var(--danger) 0%, #f43f5e 100%);
+    }
+    
+    #salesReportBtn {
+      background: linear-gradient(135deg, var(--success) 0%, #34d399 100%);
+    }
+    
+    .btn {
+      padding: 0.5rem 1.5rem;
+      border-radius: 50px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #059669;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background: #d97706;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+    
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 500;
+    }
+    
+    td {
+      padding: 1rem;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    tr:last-child td {
+      border-bottom: none;
+    }
+    
+    tr:hover td {
+      background: #f8fafc;
+    }
+    
+    input, select {
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+    
+    .modal-content {
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .nav-gradient {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .badge-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .badge-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    
+    .badge-success {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .customer-details {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Autocomplete suggestion styles (for billing medicine input) */
+    .suggestions {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 60;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-top: 6px;
+      max-height: 200px;
+      overflow: auto;
+      box-shadow: 0 8px 24px rgba(2,6,23,0.08);
+    }
+    .suggestion-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .suggestion-item:hover,
+    .suggestion-item.active {
+      background: #eef2ff;
+    }
+  </style>
+</head>
+<body class="text-gray-800">
+
+  <!-- Navbar -->
+  <nav class="nav-gradient text-white p-4 flex justify-between items-center sticky top-0 z-40">
+    <div class="flex items-center gap-3">
+      <div class="bg-white/20 p-2 rounded-lg">
+        <i class="fas fa-pills text-2xl"></i>
+      </div>
+      <h1 class="text-2xl font-bold">PharmaPortal</h1>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="text-sm">
+        <i class="far fa-calendar-alt mr-2"></i>
+        <span id="currentDate"></span>
+      </div>
+      <div id="google_translate_element" class="rounded-lg glass-effect text-gray-700 px-3 py-1 shadow-inner"></div>
+      <button id="refreshBtn" class="glass-effect text-blue-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-white/30">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+      <div class="flex items-center gap-2 bg-white/20 p-2 rounded-lg">
+        <i class="fas fa-user-circle"></i>
+        <span onclick="window.location.href='profile.html'" >
+          Admin
+</span>
+      
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Dashboard Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div id="totalMedicinesBtn" class="dashboard-card card cursor-pointer">
+        <i class="fas fa-capsules"></i>
+        <h2 class="text-lg font-semibold">Total Medicines</h2>
+        <p id="totalMedicinesCount" class="stat-number mt-2">0</p>
+      </div>
+      <div id="expiringSoonBtn" class="dashboard-card card cursor-pointer">
+        <i class="fas fa-calendar-exclamation"></i>
+        <h2 class="text-lg font-semibold">Expiring Soon</h2>
+        <p class="stat-number mt-2" id="expiringCount">0</p>
+      </div>
+      <div id="lowStockBtn" class="dashboard-card card cursor-pointer">
+        <i class="fas fa-exclamation-triangle"></i>
+        <h2 class="text-lg font-semibold">Low Stock</h2>
+        <p class="stat-number mt-2" id="lowStockCount">0</p>
+      </div>
+      <div id="salesReportBtn" class="dashboard-card card cursor-pointer">
+        <i class="fas fa-chart-line"></i>
+        <h2 class="text-lg font-semibold">Sales Report</h2>
+        <p class="text-sm mt-2 opacity-90">View sales analytics</p>
+      </div>
+    </div>
+
+    <!-- Search and Actions Bar -->
+    <div class="card p-6 mb-6">
+      <div class="flex flex-col md:flex-row md:items-center gap-4">
+        <div class="relative flex-grow">
+          <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+          <input type="text" id="searchBar" placeholder="Search medicines..." class="w-full pl-12 pr-4 py-3 border-none bg-gray-50 rounded-xl shadow-sm">
+        </div>
+        <div class="flex gap-3">
+          <button id="generateReportBtn" class="btn btn-success">
+            <i class="fas fa-file-export"></i> Generate Report
+          </button>
+          <button id="addMedicineBtn" class="btn btn-primary pulse">
+            <i class="fas fa-plus"></i> Add Medicine
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card overflow-hidden mb-8">
+      <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+        <h2 class="text-xl font-semibold">Medicine Inventory</h2>
+        <div class="text-sm text-gray-500">
+          <span id="tableCount">0</span> items
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table>
+          <thead>
+            <tr>
+              <th class="pl-6">Medicine</th>
+              <th>Stock</th>
+              <th>Expiry</th>
+              <th>Price</th>
+              <th class="pr-6">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="medicineTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Billing Section with Customer Details -->
+    <div class="card p-6 mb-8">
+      <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2 text-primary">
+        <i class="fas fa-receipt"></i> Billing Section
+      </h2>
+      
+      <!-- Customer Details -->
+      <div class="customer-details mb-6">
+        <div class="section-title">
+          <i class="fas fa-user-circle"></i> Customer Information
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+            <input type="text" id="customerName" class="w-full border px-4 py-2 rounded-lg" placeholder="Full Name" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+            <input type="tel" id="customerPhone" class="w-full border px-4 py-2 rounded-lg" placeholder="Phone Number" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <input type="email" id="customerEmail" class="w-full border px-4 py-2 rounded-lg" placeholder="Email">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Age</label>
+            <input type="number" id="customerAge" class="w-full border px-4 py-2 rounded-lg" placeholder="Age" min="0">
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+            <select id="customerGender" class="w-full border px-4 py-2 rounded-lg">
+              <option value="">Select Gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Doctor's Name (if any)</label>
+            <input type="text" id="doctorName" class="w-full border px-4 py-2 rounded-lg" placeholder="Doctor's Name">
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing Items -->
+      <div class="mb-6">
+        <div class="section-title">
+          <i class="fas fa-shopping-cart"></i> Billing Items
+        </div>
+        
+        <div class="flex flex-col md:flex-row gap-4 mb-4">
+          <div class="flex-grow">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Medicine Name</label>
+            <input type="text" id="billMedicine" placeholder="Enter medicine name" class="w-full border px-4 py-2 rounded-lg">
+          </div>
+          <div class="w-32">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+            <input type="number" id="billQty" placeholder="Qty" class="w-full border px-4 py-2 rounded-lg" min="1" value="1">
+          </div>
+          <div class="flex items-end">
+            <button id="addToBillBtn" class="btn btn-primary h-[42px]">
+              <i class="fas fa-cart-plus"></i> Add
+            </button>
+          </div>
+        </div>
+        
+        <div class="border rounded-xl overflow-hidden shadow-sm">
+          <table>
+            <thead>
+              <tr>
+                <th class="pl-6">Medicine</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th class="pr-6">Total</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="billTable"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Payment Summary -->
+      <div class="bg-blue-50 p-4 rounded-xl">
+        <div class="section-title">
+          <i class="fas fa-credit-card"></i> Payment Summary
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <div class="flex justify-between py-2">
+              <span class="font-medium">Subtotal:</span>
+              <span>₹<span id="billSubtotal">0</span></span>
+            </div>
+            <div class="flex justify-between py-2">
+              <span class="font-medium">Tax (5%):</span>
+              <span>₹<span id="billTax">0</span></span>
+            </div>
+            <div class="flex justify-between py-2 border-t border-gray-300 mt-2 pt-2">
+              <span class="font-bold text-lg">Total Amount:</span>
+              <span class="font-bold text-lg">₹<span id="billTotal">0</span></span>
+            </div>
+          </div>
+          
+          <div>
+            <div class="mb-3">
+              <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+              <select id="paymentMethod" class="w-full border px-4 py-2 rounded-lg">
+                <option value="cash">Cash</option>
+                <option value="card">Credit/Debit Card</option>
+                <option value="upi">UPI</option>
+                <option value="netbanking">Net Banking</option>
+              </select>
+            </div>
+            
+            <div class="flex gap-2">
+              <button id="generateBillBtn" class="btn btn-success flex-1">
+                <i class="fas fa-check-circle"></i> Generate Bill
+              </button>
+              <button id="printBillBtn" class="btn btn-warning">
+                <i class="fas fa-print"></i>
+              </button>
+              <button id="clearBillBtn" class="btn btn-danger">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="modalOverlay" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+    <div class="modal-content bg-white p-6 rounded-2xl w-full max-w-md relative">
+      <button id="modalClose" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+        <i class="fas fa-times text-xl"></i>
+      </button>
+      <h2 id="modalTitle" class="text-2xl font-semibold mb-6 flex items-center gap-2">
+        <i class="fas fa-pills text-blue-500"></i>
+        <span>Modal</span>
+      </h2>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Medicine Name</label>
+          <input id="modalName" type="text" placeholder="Enter medicine name" class="w-full border px-4 py-2 rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+          <input id="modalStock" type="number" placeholder="Enter stock quantity" class="w-full border px-4 py-2 rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+          <input id="modalExpiry" type="date" class="w-full border px-4 py-2 rounded-lg">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
+          <input id="modalPrice" type="number" placeholder="Enter price" class="w-full border px-4 py-2 rounded-lg">
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 mt-6">
+        <button id="modalCancel" class="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+        <button id="modalSave" class="btn btn-primary">Save Medicine</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT SECTION -->
+  <script>
+    const { jsPDF } = window.jspdf;
+
+    // Set current date
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
+
+    let medicines = [
+      { name: "Paracetamol", stock: 50, expiry: "2025-12-31", price: 10 },
+      { name: "Amoxicillin", stock: 20, expiry: "2024-06-15", price: 25 },
+      { name: "Cough Syrup", stock: 8, expiry: "2024-04-01", price: 50 },
+      { name: "Vitamin C", stock: 100, expiry: "2024-09-30", price: 15 },
+      { name: "Ibuprofen", stock: 5, expiry: "2024-11-20", price: 30 }
+    ];
+    let transactions = [];
+    let editingIndex = null;
+
+    const medicineTable = document.getElementById("medicineTable");
+    const totalMedicinesCount = document.getElementById("totalMedicinesCount");
+    const expiringCount = document.getElementById("expiringCount");
+    const lowStockCount = document.getElementById("lowStockCount");
+    const tableCount = document.getElementById("tableCount");
+
+    function renderMedicines(list = medicines) {
+      medicineTable.innerHTML = "";
+      list.forEach((m, i) => {
+        const tr = document.createElement("tr");
+        
+        // Determine if medicine is expiring soon or low stock
+        const expiryDate = new Date(m.expiry);
+        const thirtyDaysFromNow = new Date(Date.now() + 30*24*60*60*1000);
+        const isExpiringSoon = expiryDate < thirtyDaysFromNow;
+        const isLowStock = m.stock < 10;
+        
+        tr.innerHTML = `
+          <td class="pl-6 font-medium">${m.name}</td>
+          <td>
+            <div class="flex items-center gap-2">
+              <span>${m.stock}</span>
+              ${isLowStock ? '<span class="badge badge-danger">Low Stock</span>' : ''}
+            </div>
+          </td>
+          <td>
+            <div class="flex items-center gap-2">
+              <span>${m.expiry}</span>
+              ${isExpiringSoon ? '<span class="badge badge-warning">Expiring</span>' : ''}
+            </div>
+          </td>
+          <td>₹${m.price}</td>
+          <td class="pr-6">
+            <div class="flex gap-2">
+              <button onclick="openModal('update', ${i})" class="btn btn-warning py-1 px-3 text-sm">
+                <i class="fas fa-edit"></i> Update
+              </button>
+              <button onclick="removeMedicine(${i})" class="btn btn-danger py-1 px-3 text-sm">
+                <i class="fas fa-trash"></i> Remove
+              </button>
+            </div>
+          </td>`;
+        medicineTable.appendChild(tr);
+      });
+      tableCount.textContent = list.length;
+      updateStats();
+    }
+
+    function updateStats() {
+      totalMedicinesCount.textContent = medicines.length;
+      expiringCount.textContent = medicines.filter(m => new Date(m.expiry) < new Date(Date.now() + 30*24*60*60*1000)).length;
+      lowStockCount.textContent = medicines.filter(m => m.stock < 10).length;
+    }
+
+    // Modal Handling
+    const modalOverlay = document.getElementById("modalOverlay");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalName = document.getElementById("modalName");
+    const modalStock = document.getElementById("modalStock");
+    const modalExpiry = document.getElementById("modalExpiry");
+    const modalPrice = document.getElementById("modalPrice");
+    const modalSave = document.getElementById("modalSave");
+    const modalCancel = document.getElementById("modalCancel");
+    const modalClose = document.getElementById("modalClose");
+
+    function openModal(type, index = null) {
+      modalOverlay.classList.remove("hidden");
+      if (type === "add") {
+        modalTitle.innerHTML = '<i class="fas fa-plus-circle text-blue-500"></i> Add New Medicine';
+        modalName.value = "";
+        modalStock.value = "";
+        modalExpiry.value = "";
+        modalPrice.value = "";
+        editingIndex = null;
+      } else if (type === "update") {
+        modalTitle.innerHTML = '<i class="fas fa-edit text-blue-500"></i> Update Medicine';
+        const med = medicines[index];
+        modalName.value = med.name;
+        modalStock.value = med.stock;
+        modalExpiry.value = med.expiry;
+        modalPrice.value = med.price;
+        editingIndex = index;
+      }
+    }
+
+    modalCancel.addEventListener("click", () => modalOverlay.classList.add("hidden"));
+    modalClose.addEventListener("click", () => modalOverlay.classList.add("hidden"));
+    
+    modalSave.addEventListener("click", () => {
+      const newMed = {
+        name: modalName.value,
+        stock: parseInt(modalStock.value),
+        expiry: modalExpiry.value,
+        price: parseFloat(modalPrice.value)
+      };
+      if (editingIndex === null) {
+        medicines.push(newMed);
+      } else {
+        medicines[editingIndex] = newMed;
+      }
+      modalOverlay.classList.add("hidden");
+      renderMedicines();
+    });
+
+    function removeMedicine(index) {
+      if (confirm("Are you sure you want to remove this medicine?")) {
+        medicines.splice(index, 1);
+        renderMedicines();
+      }
+    }
+
+    // Billing
+    const billMedicine = document.getElementById("billMedicine");
+    const billQty = document.getElementById("billQty");
+    const billTable = document.getElementById("billTable");
+    const billSubtotal = document.getElementById("billSubtotal");
+    const billTax = document.getElementById("billTax");
+    const billTotal = document.getElementById("billTotal");
+    let billItems = [];
+
+    document.getElementById("addToBillBtn").addEventListener("click", () => {
+      const name = billMedicine.value;
+      const qty = parseInt(billQty.value);
+      const med = medicines.find(m => m.name.toLowerCase() === name.toLowerCase());
+      
+      if (!med) return alert("Medicine not found");
+      if (qty <= 0) return alert("Please enter a valid quantity");
+      if (med.stock < qty) return alert(`Only ${med.stock} items available in stock`);
+      
+      // Check if already in bill
+      const existingItemIndex = billItems.findIndex(item => item.name === med.name);
+      if (existingItemIndex !== -1) {
+        billItems[existingItemIndex].qty += qty;
+      } else {
+        billItems.push({ ...med, qty });
+      }
+      
+      renderBill();
+      billMedicine.value = "";
+      billQty.value = "1";
+      billMedicine.focus();
+    });
+
+    function renderBill() {
+      billTable.innerHTML = "";
+      let subtotal = 0;
+      
+      billItems.forEach((item, index) => {
+        const rowTotal = item.qty * item.price;
+        subtotal += rowTotal;
+        billTable.innerHTML += `
+          <tr>
+            <td class="pl-6">${item.name}</td>
+            <td>
+              <div class="flex items-center">
+                <button onclick="updateQuantity(${index}, -1)" class="bg-gray-200 rounded-l px-2 py-1">-</button>
+                <span class="px-2">${item.qty}</span>
+                <button onclick="updateQuantity(${index}, 1)" class="bg-gray-200 rounded-r px-2 py-1">+</button>
+              </div>
+            </td>
+            <td>₹${item.price}</td>
+            <td>₹${rowTotal}</td>
+            <td>
+              <button onclick="removeBillItem(${index})" class="text-red-600 hover:text-red-900">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>`;
+      });
+      
+      const tax = subtotal * 0.05;
+      const total = subtotal + tax;
+      
+      billSubtotal.textContent = subtotal.toFixed(2);
+      billTax.textContent = tax.toFixed(2);
+      billTotal.textContent = total.toFixed(2);
+    }
+
+    function updateQuantity(index, change) {
+      if (billItems[index].qty + change < 1) return;
+      billItems[index].qty += change;
+      renderBill();
+    }
+
+    function removeBillItem(index) {
+      billItems.splice(index, 1);
+      renderBill();
+    }
+
+    document.getElementById("generateBillBtn").addEventListener("click", () => {
+      // Validate customer details
+      const customerName = document.getElementById("customerName").value;
+      const customerPhone = document.getElementById("customerPhone").value;
+      
+      if (!customerName || !customerPhone) {
+        return alert("Please enter customer name and phone number");
+      }
+      
+      if (billItems.length === 0) return alert("Please add items to the bill first");
+      
+      // Update stock
+      billItems.forEach(item => {
+        const med = medicines.find(m => m.name === item.name);
+        med.stock -= item.qty;
+      });
+      
+      // Save transaction with customer details
+      const customerDetails = {
+        name: customerName,
+        phone: customerPhone,
+        email: document.getElementById("customerEmail").value,
+        age: document.getElementById("customerAge").value,
+        gender: document.getElementById("customerGender").value,
+        doctor: document.getElementById("doctorName").value
+      };
+      
+      transactions.push({ 
+        date: new Date().toLocaleString(), 
+        customer: customerDetails,
+        items: [...billItems], 
+        subtotal: parseFloat(billSubtotal.textContent),
+        tax: parseFloat(billTax.textContent),
+        total: parseFloat(billTotal.textContent),
+        paymentMethod: document.getElementById("paymentMethod").value
+      });
+      
+      alert(`Bill generated successfully for ₹${billTotal.textContent}`);
+      
+      // Reset form
+      billItems = [];
+      renderBill();
+      document.getElementById("customerName").value = "";
+      document.getElementById("customerPhone").value = "";
+      document.getElementById("customerEmail").value = "";
+      document.getElementById("customerAge").value = "";
+      document.getElementById("customerGender").value = "";
+      document.getElementById("doctorName").value = "";
+      document.getElementById("paymentMethod").value = "cash";
+      
+      renderMedicines();
+    });
+
+    document.getElementById("printBillBtn").addEventListener("click", () => {
+      if (billItems.length === 0) return alert("No items in the bill to print");
+      window.print();
+    });
+    
+    document.getElementById("clearBillBtn").addEventListener("click", () => { 
+      if (billItems.length === 0) return;
+      if (confirm("Clear all items from the bill?")) {
+        billItems = []; 
+        renderBill(); 
+      }
+    });
+
+    // Search
+    document.getElementById("searchBar").addEventListener("input", (e) => {
+      const q = e.target.value.toLowerCase();
+      renderMedicines(medicines.filter(m => m.name.toLowerCase().includes(q)));
+    });
+
+    // Reports
+    document.getElementById("generateReportBtn").addEventListener("click", () => {
+      const doc = new jsPDF();
+      doc.setFontSize(22);
+      doc.setTextColor(37, 99, 235);
+      doc.text("MediCare Inventory Report", 15, 20);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, 30);
+      
+      doc.setFontSize(16);
+      doc.setTextColor(37, 99, 235);
+      doc.text("Medicine Inventory", 15, 45);
+      
+      doc.setFontSize(10);
+      let y = 55;
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(37, 99, 235);
+      doc.rect(15, y, 170, 8, 'F');
+      doc.text("Medicine", 17, y + 6);
+      doc.text("Stock", 70, y + 6);
+      doc.text("Expiry", 100, y + 6);
+      doc.text("Price", 150, y + 6);
+      
+      y += 10;
+      doc.setTextColor(0, 0, 0);
+      medicines.forEach(m => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(m.name, 17, y);
+        doc.text(m.stock.toString(), 70, y);
+        doc.text(m.expiry, 100, y);
+        doc.text("₹" + m.price, 150, y);
+        y += 7;
+      });
+      
+      doc.save("medicare_inventory_report.pdf");
+    });
+
+    // Buttons
+    document.getElementById("refreshBtn").addEventListener("click", () => location.reload());
+    document.getElementById("addMedicineBtn").addEventListener("click", () => openModal("add"));
+    document.getElementById("totalMedicinesBtn").addEventListener("click", () => renderMedicines(medicines));
+    document.getElementById("expiringSoonBtn").addEventListener("click", () => {
+      renderMedicines(medicines.filter(m => new Date(m.expiry) < new Date(Date.now() + 30*24*60*60*1000)));
+    });
+    document.getElementById("lowStockBtn").addEventListener("click", () => {
+      renderMedicines(medicines.filter(m => m.stock < 10));
+    });
+    document.getElementById("salesReportBtn").addEventListener("click", () => {
+      if (transactions.length === 0) return alert("No sales data available");
+      
+      const doc = new jsPDF();
+      doc.setFontSize(22);
+      doc.setTextColor(37, 99, 235);
+      doc.text("MediCare Sales Report", 15, 20);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 15, 30);
+      
+      doc.setFontSize(16);
+      doc.setTextColor(37, 99, 235);
+      doc.text("Transaction History", 15, 45);
+      
+      doc.setFontSize(10);
+      let y = 55;
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(37, 99, 235);
+      doc.rect(15, y, 170, 8, 'F');
+      doc.text("Date", 17, y + 6);
+      doc.text("Customer", 50, y + 6);
+      doc.text("Items", 100, y + 6);
+      doc.text("Total", 150, y + 6);
+      
+      y += 10;
+      doc.setTextColor(0, 0, 0);
+      transactions.forEach((t, i) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.text(t.date, 17, y);
+        doc.text(t.customer.name, 50, y);
+        doc.text(t.items.length + " items", 100, y);
+        doc.text("₹" + t.total.toFixed(2), 150, y);
+        y += 7;
+      });
+      
+      // Calculate total sales
+      const totalSales = transactions.reduce((sum, t) => sum + t.total, 0);
+      doc.setFontSize(14);
+      doc.setTextColor(37, 99, 235);
+      doc.text(`Total Sales: ₹${totalSales.toFixed(2)}`, 15, y + 10);
+      
+      doc.save("medicare_sales_report.pdf");
+    });
+
+    // Initialize
+    renderMedicines();
+  </script>
+
+  <!-- Google Translate -->
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+    }
+  </script>
+  <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

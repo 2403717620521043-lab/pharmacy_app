@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pharmacist Profile - pharmaportal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <div class="max-w-4xl mx-auto p-4">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold"><i class="fas fa-user-circle mr-2 text-purple-600"></i>Pharmacist Profile</h1>
+      <div class="flex gap-2">
+        <button id="editProfile" class="btn bg-indigo-600 text-white px-3 py-1 rounded">Edit</button>
+        <button id="save" class="btn bg-green-600 text-white px-3 py-1 rounded" disabled>Save</button>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-4">
+      <!-- Left: Avatar / actions -->
+      <div class="col-span-1 bg-white border rounded-xl p-4">
+        <div class="flex flex-col items-center gap-4">
+          <div id="avatarPreview" class="w-28 h-28 rounded-full bg-gray-100 flex items-center justify-center text-3xl text-gray-400">
+            <i class="fas fa-user"></i>
+          </div>
+          <input id="avatarInput" type="file" accept="image/*" class="hidden file-input" data-doc="avatar">
+          <div class="flex gap-2">
+            <button id="uploadAvatar" class="upload-btn bg-blue-600 text-white px-3 py-1 rounded">Upload Avatar</button>
+            <button id="removeAvatar" class="bg-red-500 text-white px-3 py-1 rounded">Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle: fields -->
+      <div class="col-span-2 bg-white border rounded-xl p-4">
+        <form id="profile-form" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Pharmacy Name</label>
+            <input id="pharmacyName" name="pharmacyName" class="mt-1 block w-full border rounded p-2" disabled>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">License Number</label>
+            <input id="licenseNumber" name="licenseNumber" class="mt-1 block w-full border rounded p-2" disabled>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Phone</label>
+            <input id="phone" name="phone" class="mt-1 block w-full border rounded p-2" disabled>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Address</label>
+            <textarea id="address" name="address" class="mt-1 block w-full border rounded p-2" rows="2" disabled></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Language</label>
+            <select id="lang" name="lang" class="mt-1 block w-full border rounded p-2" disabled>
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+            </select>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Profile Summary Section -->
+    <div class="mt-8 bg-white border rounded-xl p-4">
+      <h2 class="text-lg font-semibold mb-2">Uploaded Documents</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- doc item template -->
+        <div class="doc-item bg-gray-50 p-3 rounded border">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-medium">Drug License</div>
+              <div class="text-xs text-gray-500 file-name hidden"></div>
+            </div>
+            <div class="flex gap-2 items-center">
+              <input type="file" class="file-input hidden" data-doc="drugLicense" />
+              <button class="upload-btn bg-blue-600 text-white px-2 py-1 rounded text-sm">Upload</button>
+              <button class="view-btn bg-gray-200 px-2 py-1 rounded text-sm hidden">View</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-item bg-gray-50 p-3 rounded border">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-medium">GST Certificate</div>
+              <div class="text-xs text-gray-500 file-name hidden"></div>
+            </div>
+            <div class="flex gap-2 items-center">
+              <input type="file" class="file-input hidden" data-doc="gstCertificate" />
+              <button class="upload-btn bg-blue-600 text-white px-2 py-1 rounded text-sm">Upload</button>
+              <button class="view-btn bg-gray-200 px-2 py-1 rounded text-sm hidden">View</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-item bg-gray-50 p-3 rounded border">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-sm font-medium">Pharmacist Registration</div>
+              <div class="text-xs text-gray-500 file-name hidden"></div>
+            </div>
+            <div class="flex gap-2 items-center">
+              <input type="file" class="file-input hidden" data-doc="pharmacistRegistration" />
+              <button class="upload-btn bg-blue-600 text-white px-2 py-1 rounded text-sm">Upload</button>
+              <button class="view-btn bg-gray-200 px-2 py-1 rounded text-sm hidden">View</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="inline-message" class="inline-message hidden mt-4" role="status" aria-live="polite"></div>
+  </div>
+
+  <style>
+    .inline-message { padding: 10px; border-radius: 4px; margin: 8px 0; }
+    .inline-message.hidden { display: none; }
+    .inline-message.info { background:#e7f3fe; color:#0b66c3; border:1px solid #b6e0ff;}
+    .inline-message.success { background:#e6ffed; color:#0a7a3a; border:1px solid #bff0c8;}
+    .inline-message.error { background:#fff0f0; color:#a12a2a; border:1px solid #f7b0b0;}
+  </style>
+
+  <script>
+    // API base (server serves static + api on same origin)
+    const API_BASE = (location.origin || '') + '/api';
+
+    function showInlineMessage(text, type = 'info', timeoutMs = 5000) {
+      const el = document.getElementById('inline-message');
+      if (!el) return;
+      el.textContent = text;
+      el.className = `inline-message ${type}`;
+      el.classList.remove('hidden');
+      clearTimeout(el._t);
+      if (timeoutMs) el._t = setTimeout(() => el.classList.add('hidden'), timeoutMs);
+    }
+
+    function updateProfileSummary(profile) {
+      // update avatar text, summary, etc. (keeps minimal)
+      const avatar = document.getElementById('avatarPreview');
+      avatar.textContent = (profile && profile.pharmacyName) ? profile.pharmacyName.trim().charAt(0).toUpperCase() : '';
+    }
+
+    async function fetchProfile() {
+      try {
+        const res = await fetch(API_BASE + '/profile');
+        if (!res.ok) throw new Error('failed');
+        return await res.json();
+      } catch (e) {
+        console.error(e);
+        showInlineMessage('Unable to load profile from server', 'error');
+        return null;
+      }
+    }
+
+    async function saveProfileToServer(data) {
+      try {
+        const res = await fetch(API_BASE + '/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return res.ok;
+      } catch (e) {
+        console.error(e);
+        return false;
+      }
+    }
+
+    (async function init() {
+      const fields = ['pharmacyName','licenseNumber','phone','address','lang'];
+      const inputFields = fields.map(id => document.getElementById(id));
+      const editButton = document.getElementById('editProfile');
+      const saveButton = document.getElementById('save');
+
+      // load
+      const profile = await fetchProfile();
+      if (profile) {
+        fields.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.value = profile[id] || '';
+        });
+        updateProfileSummary(profile);
+
+        // documents
+        const savedDocs = profile.docs || {};
+        document.querySelectorAll('.doc-item').forEach(item => {
+          const fileInput = item.querySelector('.file-input');
+          const docType = fileInput.getAttribute('data-doc');
+          const viewBtn = item.querySelector('.view-btn');
+          const fileNameSpan = item.querySelector('.file-name');
+
+          if (savedDocs[docType]) {
+            // savedDocs[docType].url is returned as /api/files/:id
+            const url = savedDocs[docType].url || '';
+            fileNameSpan.textContent = (url.split('/').pop()) || 'Uploaded';
+            fileNameSpan.classList.remove('hidden');
+            viewBtn.classList.remove('hidden');
+            viewBtn.onclick = () => window.open((url.startsWith('http') ? url : (location.origin + url)), '_blank');
+          } else {
+            fileNameSpan.textContent = '';
+            fileNameSpan.classList.add('hidden');
+            viewBtn.classList.add('hidden');
+          }
+        });
+      }
+
+      let isEditMode = false;
+      editButton.addEventListener('click', async () => {
+        isEditMode = !isEditMode;
+        if (isEditMode) {
+          inputFields.forEach(f => f.disabled = false);
+          editButton.textContent = 'Cancel';
+          saveButton.disabled = false;
+          showInlineMessage('Edit mode enabled. Make your changes and save.', 'info');
+        } else {
+          // reload to discard edits
+          const fresh = await fetchProfile();
+          if (fresh) fields.forEach(id => document.getElementById(id).value = fresh[id] || '');
+          inputFields.forEach(f => f.disabled = true);
+          editButton.textContent = 'Edit';
+          saveButton.disabled = true;
+          showInlineMessage('Changes discarded', 'info');
+          updateProfileSummary(fresh);
+        }
+      });
+
+      saveButton.addEventListener('click', async () => {
+        const payload = {};
+        fields.forEach(id => payload[id] = document.getElementById(id).value);
+        showInlineMessage('Saving...', 'info');
+        const ok = await saveProfileToServer(payload);
+        if (ok) {
+          inputFields.forEach(f => f.disabled = true);
+          editButton.textContent = 'Edit';
+          saveButton.disabled = true;
+          isEditMode = false;
+          updateProfileSummary(payload);
+          showInlineMessage('Profile saved successfully!', 'success');
+        } else {
+          showInlineMessage('Save failed', 'error');
+        }
+      });
+
+      // avatar upload handlers
+      const avatarInput = document.getElementById('avatarInput');
+      document.getElementById('uploadAvatar').addEventListener('click', () => avatarInput.click());
+      avatarInput.addEventListener('change', function () {
+        const f = this.files && this.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          document.getElementById('avatarPreview').style.backgroundImage = `url(${reader.result})`;
+          document.getElementById('avatarPreview').textContent = '';
+        };
+        reader.readAsDataURL(f);
+        // optional: upload avatar to server using /api/profile/upload?doc=avatar
+      });
+      document.getElementById('removeAvatar').addEventListener('click', () => {
+        document.getElementById('avatarPreview').style.backgroundImage = '';
+        document.getElementById('avatarPreview').textContent = '';
+      });
+
+      // document upload handlers
+      document.querySelectorAll('.doc-item').forEach(item => {
+        const uploadBtn = item.querySelector('.upload-btn');
+        const fileInput = item.querySelector('.file-input');
+        const viewBtn = item.querySelector('.view-btn');
+        const fileNameSpan = item.querySelector('.file-name');
+        const docType = fileInput.getAttribute('data-doc');
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', async function () {
+          if (!this.files || !this.files[0]) return;
+          const fd = new FormData();
+          fd.append('file', this.files[0]);
+          showInlineMessage('Uploading...', 'info');
+          try {
+            const res = await fetch(API_BASE + `/profile/upload?doc=${encodeURIComponent(docType)}`, { method: 'POST', body: fd });
+            const j = await res.json();
+            if (res.ok) {
+              fileNameSpan.textContent = j.filename || this.files[0].name;
+              fileNameSpan.classList.remove('hidden');
+              viewBtn.classList.remove('hidden');
+              viewBtn.onclick = () => window.open((j.url && j.url.startsWith('http') ? j.url : (location.origin + j.url)), '_blank');
+              showInlineMessage(`${fileNameSpan.textContent} uploaded`, 'success');
+            } else {
+              console.error(j);
+              showInlineMessage('Upload failed', 'error');
+            }
+          } catch (err) {
+            console.error(err);
+            showInlineMessage('Upload error', 'error');
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
