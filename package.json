@@ -1,0 +1,26 @@
+{
+  "name": "pharmaportal-server",
+  "version": "1.0.0",
+  "description": "Combined backend for Pharmaportal (Express + MongoDB + GridFS)",
+  "main": "server/combined-server.js",
+  "scripts": {
+    "start": "node server/combined-server.js",
+    "dev": "nodemon server/combined-server.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "mongoose": "^7.5.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
