@@ -32,6 +32,9 @@
         .medical-pattern {
             background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
+       /* Inline field error styles */
+       .field-error { color: #b91c1c; font-size: 0.8rem; margin-top: 0.25rem; }
+       .input-error { border-color: #ef4444 !important; box-shadow: 0 0 0 1px rgba(239,68,68,0.08); }
         .form-container {
             transition: all 0.3s ease;
         }
@@ -155,7 +158,7 @@
                 <form id="loginForm" class="toggle-form active space-y-6">
                     <div class="text-center mb-8">
                         <h2 class="text-3xl font-bold text-dark mb-2">Pharmacy Login</h2>
-                        <p class="text-gray-600">Use demo credentials to continue</p>
+                        <p class="text-gray-600">Use credentials to continue</p>
                     </div>
                     
                     <div>
@@ -164,7 +167,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-user text-gray-400"></i>
                             </div>
-                            <input type="text" id="email" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus-border-transparent outline-none transition" placeholder="Enter your email or pharmacy ID (demo)" required>
+                            <input type="text" id="email" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus-border-transparent outline-none transition" placeholder="Enter your email or pharmacy ID" required>
                         </div>
                     </div>
                     
@@ -174,7 +177,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fas fa-lock text-gray-400"></i>
                             </div>
-                            <input type="password" id="password" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus-border-transparent outline-none transition" placeholder="Enter your password (demo)" required>
+                            <input type="password" id="password" class="pl-10 w-full rounded-lg border-gray-300 bg-gray-50 py-3 px-4 focus:ring-2 focus:ring-primary focus-border-transparent outline-none transition" placeholder="Enter your password" required>
                             <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center" id="togglePassword">
                                 <i class="fas fa-eye-slash text-gray-400"></i>
                             </button>
@@ -554,21 +557,21 @@
         let emailTimerInterval = null;
         let smsTimerInterval = null;
 
-        // Toggle password visibility
-        document.getElementById('togglePassword').addEventListener('click', function() {
-            const passwordInput = document.getElementById('password');
-            const icon = this.querySelector('i');
-            
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            } else {
-                passwordInput.type = 'password';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            }
-        });
+         // Toggle password visibility
+         document.getElementById('togglePassword').addEventListener('click', function() {
+             const passwordInput = document.getElementById('password');
+             const icon = this.querySelector('i');
+             
+             if (passwordInput.type === 'password') {
+                 passwordInput.type = 'text';
+                 icon.classList.remove('fa-eye-slash');
+                 icon.classList.add('fa-eye');
+             } else {
+                 passwordInput.type = 'password';
+                 icon.classList.remove('fa-eye');
+                 icon.classList.add('fa-eye-slash');
+             }
+         });
 
         // Toggle password visibility for registration form
         document.querySelectorAll('.toggle-password').forEach(button => {
@@ -682,25 +685,63 @@
             el.className = `text-xs ${type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : 'text-gray-600'}`;
         }
 
-        // Form validation for each step
-        function validateStep(step) {
-            let isValid = true;
-            
-            if (step === 1) {
-                const requiredFields = [
-                    'pharmacyName', 'ownerName', 'regEmail', 'phone', 
-                    'openTime', 'closeTime', 'address', 'city', 'state', 'pincode'
-                ];
-                
-                requiredFields.forEach(field => {
-                    const element = document.getElementById(field);
-                    if (!element.value.trim()) {
-                        element.classList.add('border-red-500');
-                        isValid = false;
-                    } else {
-                        element.classList.remove('border-red-500');
-                    }
-                });
+        // Inline field message helpers
+        function showFieldMessage(inputEl, message) {
+if (!inputEl) return;
+// find or create the error container
+let container = inputEl.parentElement;
+if (!container) container = inputEl;
+let msg = container.querySelector('.field-error');
+if (!msg) {
+    msg = document.createElement('div');
+    msg.className = 'field-error';
+    container.appendChild(msg);
+}
+msg.textContent = message;
+inputEl.classList.add('input-error');
+        }
+
+        function clearFieldMessage(inputEl) {
+            if (!inputEl) return;
+            const container = inputEl.parentElement || inputEl;
+            const msg = container.querySelector('.field-error');
+            if (msg) msg.remove();
+            inputEl.classList.remove('input-error');
+        }
+
+        // Attach blur/input listeners to required inputs to show inline messages
+        document.querySelectorAll('input[required], textarea[required], select[required]').forEach(el => {
+            el.addEventListener('blur', () => {
+                if (!el.value || !String(el.value).trim()) {
+                    showFieldMessage(el, 'This field is required');
+                }
+            });
+            el.addEventListener('input', () => clearFieldMessage(el));
+        });
+ 
+         // Form validation for each step
+         function validateStep(step) {
+             let isValid = true;
+             
+             if (step === 1) {
+                 const requiredFields = [
+                     'pharmacyName', 'ownerName', 'regEmail', 'phone', 
+                     'openTime', 'closeTime', 'address', 'city', 'state', 'pincode'
+                 ];
+                 
+                 requiredFields.forEach(field => {
+                     const element = document.getElementById(field);
+                     if (!element.value.trim()) {
+-                        element.classList.add('border-red-500');
++                        element.classList.add('border-red-500');
++                        showFieldMessage(element, 'This field is required');
+                         isValid = false;
+                     } else {
+-                        element.classList.remove('border-red-500');
++                        element.classList.remove('border-red-500');
++                        clearFieldMessage(element);
+                     }
+                 });
                 
                 // Validate email format
                 const email = document.getElementById('regEmail');
@@ -741,11 +782,15 @@
                 requiredFields.forEach(field => {
                     const element = document.getElementById(field);
                     if (!element.value.trim()) {
-                        element.classList.add('border-red-500');
-                        isValid = false;
-                    } else {
-                        element.classList.remove('border-red-500');
-                    }
+-                        element.classList.add('border-red-500');
++                        element.classList.add('border-red-500');
++                        showFieldMessage(element, 'This field is required');
+                         isValid = false;
+                     } else {
+-                        element.classList.remove('border-red-500');
++                        element.classList.remove('border-red-500');
++                        clearFieldMessage(element);
+                     }
                 });
                 
                 // Validate file uploads
@@ -759,9 +804,13 @@
                     if (!element.files.length) {
                         isValid = false;
                         // Highlight the upload box
-                        element.parentElement.classList.add('border-red-500');
+-                        element.parentElement.classList.add('border-red-500');
++                        element.parentElement.classList.add('border-red-500');
++                        showFieldMessage(element.parentElement, 'Please upload the required document');
                     } else {
-                        element.parentElement.classList.remove('border-red-500');
+-                        element.parentElement.classList.remove('border-red-500');
++                        element.parentElement.classList.remove('border-red-500');
++                        clearFieldMessage(element.parentElement);
                     }
                 });
             }
@@ -774,30 +823,38 @@
                 
                 if (!password.value) {
                     password.classList.add('border-red-500');
++                    showFieldMessage(password, 'Password is required');
                     isValid = false;
                 } else {
                     password.classList.remove('border-red-500');
++                    clearFieldMessage(password);
                 }
                 
                 if (!confirmPassword.value || password.value !== confirmPassword.value) {
                     confirmPassword.classList.add('border-red-500');
++                    showFieldMessage(confirmPassword, 'Passwords must match');
                     isValid = false;
                 } else {
                     confirmPassword.classList.remove('border-red-500');
++                    clearFieldMessage(confirmPassword);
                 }
                 
                 if (!terms.checked) {
                     terms.parentElement.classList.add('text-red-500');
++                    showFieldMessage(terms.parentElement, 'You must accept the terms');
                     isValid = false;
                 } else {
                     terms.parentElement.classList.remove('text-red-500');
++                    clearFieldMessage(terms.parentElement);
                 }
                 
                 if (!privacy.checked) {
                     privacy.parentElement.classList.add('text-red-500');
++                    showFieldMessage(privacy.parentElement, 'Please acknowledge the privacy notice');
                     isValid = false;
                 } else {
                     privacy.parentElement.classList.remove('text-red-500');
++                    clearFieldMessage(privacy.parentElement);
                 }
             }
             
@@ -820,35 +877,44 @@
                 setStatus('loginStatus', 'Please fill in all required fields', 'error');
                 return;
             }
-
-            // call backend auth endpoint instead of demo logic
-            setStatus('loginStatus', 'Signing in...', 'info');
-            btn.textContent = 'Signing in...';
-            btn.disabled = true;
-
-            try {
-              const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-              });
-              const j = await res.json().catch(() => ({}));
-              if (res.ok && j.ok) {
-                setStatus('loginStatus', 'Login successful! Redirecting...', 'success');
-                // redirect to home
-                setTimeout(() => { window.location.href = '/home'; }, 600);
-              } else {
-                setStatus('loginStatus', j.error || 'Invalid credentials', 'error');
-                btn.textContent = 'Sign In';
-                btn.disabled = false;
-              }
-            } catch (err) {
-              console.error(err);
-              setStatus('loginStatus', 'Network error. Try again.', 'error');
-              btn.textContent = 'Sign In';
-              btn.disabled = false;
+            // clear any previous field messages
+            clearFieldMessage(document.getElementById('email'));
+            clearFieldMessage(document.getElementById('password'));
+            if (!email || !password) {
+                if (!email) showFieldMessage(document.getElementById('email'), 'Please enter email or ID');
+                if (!password) showFieldMessage(document.getElementById('password'), 'Please enter password');
+                setStatus('loginStatus', 'Please fill in all required fields', 'error');
+                return;
             }
-        });
+ 
+             // call backend auth endpoint instead of demo logic
+             setStatus('loginStatus', 'Signing in...', 'info');
+             btn.textContent = 'Signing in...';
+             btn.disabled = true;
+ 
+             try {
+               const res = await fetch('/api/auth/login', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ email, password })
+               });
+               const j = await res.json().catch(() => ({}));
+               if (res.ok && j.ok) {
+                 setStatus('loginStatus', 'Login successful! Redirecting...', 'success');
+                 // redirect to home
+                 setTimeout(() => { window.location.href = '/home'; }, 600);
+               } else {
+                 setStatus('loginStatus', j.error || 'Invalid credentials', 'error');
+                 btn.textContent = 'Sign In';
+                 btn.disabled = false;
+               }
+             } catch (err) {
+               console.error(err);
+               setStatus('loginStatus', 'Network error. Try again.', 'error');
+               btn.textContent = 'Sign In';
+               btn.disabled = false;
+             }
+         });
 
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1202,5 +1268,44 @@
         document.getElementById('openTime').value = '09:00';
         document.getElementById('closeTime').value = '18:00';
     </script>
+    <script>
+  // if already logged in, redirect to home
+  (async function checkLoggedIn() {
+    try {
+      const r = await fetch('/api/profile', { method: 'GET', credentials: 'include' });
+      if (r.ok) return window.location.href = '/home';
+    } catch (e) { /* ignore */ }
+  })();
+
+   document.getElementById('loginForm').addEventListener('submit', async (e) => {
+     e.preventDefault();
+     const email = document.getElementById('email').value.trim();
+     const password = document.getElementById('password').value;
+     const btn = e.target.querySelector('button[type="submit"]');
+     btn.disabled = true;
+     try {
+       const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+       const json = await res.json().catch(() => ({}));
+       if (res.ok && json.ok) {
+         window.location.href = '/home';
+       } else {
+         const msg = document.getElementById('loginMsg') || document.createElement('div');
+         msg.id = 'loginMsg';
+         msg.textContent = json.error || 'Login failed';
+         msg.style.color = 'crimson';
+         e.target.appendChild(msg);
+         btn.disabled = false;
+       }
+     } catch (err) {
+       console.error(err);
+       btn.disabled = false;
+     }
+   });
+  </script>
 </body>
 </html>

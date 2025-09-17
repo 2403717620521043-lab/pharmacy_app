@@ -27,15 +27,27 @@ const STATIC_DIR = path.join(__dirname, '..', 'styles');
 // Serve static front-end
 app.use('/', express.static(STATIC_DIR, { extensions: ['html', 'htm'] }));
 
-// MongoDB + GridFS
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
-const conn = mongoose.connection;
+// MongoDB + GridFS — connect before starting server, enable debug logging
+mongoose.set('debug', true);
 let gfsBucket;
-conn.once('open', () => {
-  gfsBucket = new mongoose.mongo.GridFSBucket(conn.db, { bucketName: 'uploads' });
-  console.log('MongoDB connected, GridFS ready');
-});
-conn.on('error', err => console.error('Mongo connection error:', err));
+async function initDbAndStart() {
+  try {
+    const connOptions = { dbName: undefined }; // keep defaults unless MONGO_URI includes DB
+    await mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+    gfsBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, { bucketName: 'uploads' });
+    console.log('MongoDB connected, GridFS ready');
+    // start server after DB connected
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('MongoDB connection failed:', err);
+    // exit so supervisor can restart / you can fix env
+    process.exit(1);
+  }
+}
+// call init
+initDbAndStart();
 
 // Schemas
 const UserSchema = new mongoose.Schema({
@@ -227,6 +239,6 @@ app.get('/login', (req, res) => res.sendFile(path.join(STATIC_DIR, 'login.html')
 app.get('/register', (req, res) => res.sendFile(path.join(STATIC_DIR, 'register.html')));
 
 // Start
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server running at http://localhost:${PORT}`);
+// });

@@ -224,30 +224,14 @@
       background: #d1fae5;
       color: #065f46;
     }
-    
-    .glass-effect {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .customer-details {
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
-    
-    .section-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--primary);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    /* Inline alert for billing errors (expired etc.) */
+    .inline-alert { padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.95rem; margin-bottom: 0.75rem; display: inline-block; transition: opacity .25s ease; }
+    .inline-alert.error { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .inline-alert.hidden { opacity: 0; pointer-events: none; height: 0; overflow: hidden; display: none; }
+    .inline-alert.show { opacity: 1; display: inline-block; pointer-events: auto; height: auto; }
+    .expired-row { opacity: 0.6; filter:grayscale(20%); }
 
-    /* Autocomplete suggestion styles (for billing medicine input) */
+    /* Autocomplete suggestion styles for billing medicine input */
     .suggestions {
       position: absolute;
       left: 0;
@@ -257,7 +241,7 @@
       border: 1px solid #e5e7eb;
       border-radius: 8px;
       margin-top: 6px;
-      max-height: 200px;
+      max-height: 220px;
       overflow: auto;
       box-shadow: 0 8px 24px rgba(2,6,23,0.08);
     }
@@ -265,45 +249,76 @@
       padding: 8px 12px;
       cursor: pointer;
       font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
     }
     .suggestion-item:hover,
     .suggestion-item.active {
       background: #eef2ff;
     }
-  </style>
-</head>
-<body class="text-gray-800">
+    /* Inventory scroll + sticky header */
+    .inventory-scroll {
+      max-height: 420px;      /* adjust as needed */
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    /* keep the table header visible while scrolling the inventory list */
+    table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--primary); /* match header background */
+    }
 
-  <!-- Navbar -->
-  <nav class="nav-gradient text-white p-4 flex justify-between items-center sticky top-0 z-40">
-    <div class="flex items-center gap-3">
-      <div class="bg-white/20 p-2 rounded-lg">
-        <i class="fas fa-pills text-2xl"></i>
-      </div>
-      <h1 class="text-2xl font-bold">PharmaPortal</h1>
-    </div>
+    /* inline field error styles for modal/form */
+    .field-error { color:#b91c1c; font-size:0.8rem; margin-top:0.25rem; }
+    .input-error { border-color:#ef4444 !important; box-shadow: 0 0 0 1px rgba(239,68,68,0.08); }
+  </style>
+  </head>
+  <body class="text-gray-800">
+
+  <!-- Site Navbar (click -> navigate to section) -->
+  <nav class="site-nav nav-gradient text-white p-3 px-6 flex justify-between items-center sticky top-0 z-50">
     <div class="flex items-center gap-4">
-      <div class="text-sm">
+      <button class="flex items-center gap-3 bg-white/10 p-2 rounded-lg" aria-label="home" data-target="#top">
+        <i class="fas fa-pills text-2xl"></i>
+        <span class="text-xl font-semibold">PharmaPortal</span>
+      </button>
+      <div class="hidden md:flex items-center gap-2 ml-6">
+        <a href="#top" class="nav-link px-3 py-2 hover:bg-white/10 rounded" data-target="#top">Dashboard</a>
+        <a href="#inventory" class="nav-link px-3 py-2 hover:bg-white/10 rounded" data-target="#inventory">Inventory</a>
+        <a href="#billing" class="nav-link px-3 py-2 hover:bg-white/10 rounded" data-target="#billing">Billing</a>
+        <a href="#reports" class="nav-link px-3 py-2 hover:bg-white/10 rounded" data-target="#reports">Reports</a>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4">
+      <div class="text-sm hidden sm:block">
         <i class="far fa-calendar-alt mr-2"></i>
         <span id="currentDate"></span>
       </div>
-      <div id="google_translate_element" class="rounded-lg glass-effect text-gray-700 px-3 py-1 shadow-inner"></div>
-      <button id="refreshBtn" class="glass-effect text-blue-600 px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-white/30">
-        <i class="fas fa-sync-alt"></i> Refresh
+      <div id="google_translate_element" class="rounded-lg text-gray-700 px-3 py-1 shadow-inner hidden sm:block"></div>
+      <button id="refreshBtn" class="glass-effect text-white/90 px-3 py-1 rounded-lg flex items-center gap-2 hover:opacity-90">
+        <i class="fas fa-sync-alt"></i>
       </button>
-      <div class="flex items-center gap-2 bg-white/20 p-2 rounded-lg">
+
+      <!-- profile link -->
+      <a id="profileLink" href="/profile" class="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-lg">
         <i class="fas fa-user-circle"></i>
-        <span onclick="window.location.href='profile.html'" >
-          Admin
-</span>
-      
-      </div>
+        <span id="profileName">Admin</span>
+      </a>
+
+      <!-- LOGOUT button added to navbar -->
+      <button id="navLogoutBtn" class="ml-3 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm">
+        <i class="fas fa-sign-out-alt mr-1"></i> Logout
+      </button>
     </div>
   </nav>
-
-  <div class="max-w-7xl mx-auto px-4 py-6">
-    <!-- Dashboard Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+ 
+   <div id="top" class="max-w-7xl mx-auto px-4 py-6">
+     <!-- Dashboard Cards -->
+     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div id="totalMedicinesBtn" class="dashboard-card card cursor-pointer">
         <i class="fas fa-capsules"></i>
         <h2 class="text-lg font-semibold">Total Medicines</h2>
@@ -345,14 +360,15 @@
     </div>
 
     <!-- Table Section -->
-    <div class="card overflow-hidden mb-8">
+    <div id="inventory" class="card overflow-hidden mb-8">
       <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
         <h2 class="text-xl font-semibold">Medicine Inventory</h2>
         <div class="text-sm text-gray-500">
           <span id="tableCount">0</span> items
         </div>
       </div>
-      <div class="overflow-x-auto">
+      <!-- horizontal + vertical scroll container for inventory; header stays visible -->
+      <div class="overflow-x-auto inventory-scroll">
         <table>
           <thead>
             <tr>
@@ -369,7 +385,7 @@
     </div>
 
     <!-- Billing Section with Customer Details -->
-    <div class="card p-6 mb-8">
+    <div id="billing" class="card p-6 mb-8">
       <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2 text-primary">
         <i class="fas fa-receipt"></i> Billing Section
       </h2>
@@ -421,22 +437,29 @@
         <div class="section-title">
           <i class="fas fa-shopping-cart"></i> Billing Items
         </div>
+
+        <!-- inline message area (for expired / validation messages) -->
+        <div id="billInlineMsg" class="inline-alert hidden" role="status" aria-live="polite"></div>
         
         <div class="flex flex-col md:flex-row gap-4 mb-4">
-          <div class="flex-grow">
+          <div class="flex-grow relative">
             <label class="block text-sm font-medium text-gray-700 mb-1">Medicine Name</label>
-            <input type="text" id="billMedicine" placeholder="Enter medicine name" class="w-full border px-4 py-2 rounded-lg">
+            <!-- autocomplete wrapper -->
+            <div style="position:relative">
+              <input type="text" id="billMedicine" placeholder="Enter medicine name" class="w-full border px-4 py-2 rounded-lg" autocomplete="off">
+              <ul id="billSuggestions" class="suggestions hidden" role="listbox" aria-label="medicine suggestions"></ul>
+            </div>
           </div>
-          <div class="w-32">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-            <input type="number" id="billQty" placeholder="Qty" class="w-full border px-4 py-2 rounded-lg" min="1" value="1">
-          </div>
-          <div class="flex items-end">
-            <button id="addToBillBtn" class="btn btn-primary h-[42px]">
-              <i class="fas fa-cart-plus"></i> Add
-            </button>
-          </div>
-        </div>
+           <div class="w-32">
+             <label class="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+             <input type="number" id="billQty" placeholder="Qty" class="w-full border px-4 py-2 rounded-lg" min="1" value="1">
+           </div>
+           <div class="flex items-end">
+             <button id="addToBillBtn" class="btn btn-primary h-[42px]">
+               <i class="fas fa-cart-plus"></i> Add
+             </button>
+           </div>
+         </div>
         
         <div class="border rounded-xl overflow-hidden shadow-sm">
           <table>
@@ -488,11 +511,11 @@
             </div>
             
             <div class="flex gap-2">
-              <button id="generateBillBtn" class="btn btn-success flex-1">
-                <i class="fas fa-check-circle"></i> Generate Bill
+              <button id="exportBillBtn" class="btn btn-success flex-1">
+                <i class="fas fa-file-download"></i> Generate & Download PDF
               </button>
               <button id="printBillBtn" class="btn btn-warning">
-                <i class="fas fa-print"></i>
+                <i class="fas fa-print"></i> Print
               </button>
               <button id="clearBillBtn" class="btn btn-danger">
                 <i class="fas fa-trash"></i>
@@ -516,20 +539,34 @@
       </h2>
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Medicine Name</label>
-          <input id="modalName" type="text" placeholder="Enter medicine name" class="w-full border px-4 py-2 rounded-lg">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Medicine Name *</label>
+          <input id="modalName" type="text" placeholder="Enter medicine name" class="w-full border px-4 py-2 rounded-lg" required>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-          <input id="modalStock" type="number" placeholder="Enter stock quantity" class="w-full border px-4 py-2 rounded-lg">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity *</label>
+          <input id="modalStock" type="number" placeholder="Enter stock quantity" class="w-full border px-4 py-2 rounded-lg" required>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-          <input id="modalExpiry" type="date" class="w-full border px-4 py-2 rounded-lg">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Date *</label>
+          <input id="modalExpiry" type="date" class="w-full border px-4 py-2 rounded-lg" required>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
-          <input id="modalPrice" type="number" placeholder="Enter price" class="w-full border px-4 py-2 rounded-lg">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Price (₹) *</label>
+          <input id="modalPrice" type="number" placeholder="Enter price" class="w-full border px-4 py-2 rounded-lg" required>
+        </div>
+
+        <!-- Supplier details (required) -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Name *</label>
+          <input id="modalSupplierName" type="text" placeholder="Supplier name" class="w-full border px-4 py-2 rounded-lg" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Phone *</label>
+          <input id="modalSupplierPhone" type="tel" placeholder="Supplier phone" class="w-full border px-4 py-2 rounded-lg" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Supplier Email</label>
+          <input id="modalSupplierEmail" type="email" placeholder="Supplier email" class="w-full border px-4 py-2 rounded-lg">
         </div>
       </div>
       <div class="flex justify-end gap-3 mt-6">
@@ -542,6 +579,75 @@
   <!-- SCRIPT SECTION -->
   <script>
     const { jsPDF } = window.jspdf;
+    // NAV: smooth navigation + active link highlight
+    (function setupNav() {
+      const links = Array.from(document.querySelectorAll('.nav-link'));
+      function scrollToTarget(selector) {
+        const el = selector === '#top' ? document.body : document.querySelector(selector);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      links.forEach(a => {
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = a.getAttribute('data-target') || a.getAttribute('href');
+          scrollToTarget(target);
+        });
+      });
+      // also allow clicking the logo/home button
+      document.querySelectorAll('[data-target="#top"]').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); scrollToTarget('#top'); });
+      });
+
+      // highlight active nav item using IntersectionObserver
+      const sections = ['#top', '#inventory', '#billing', '#reports'].map(s => s === '#top' ? document.body : document.querySelector(s)).filter(Boolean);
+      const sectionToLink = {};
+      links.forEach(l => sectionToLink[l.getAttribute('data-target')] = l);
+
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const id = entry.target === document.body ? '#top' : ('#' + entry.target.id);
+          const link = sectionToLink[id];
+          if (!link) return;
+          if (entry.isIntersecting && entry.intersectionRatio > 0.3) {
+            links.forEach(x => x.classList.remove('active'));
+            link.classList.add('active');
+          }
+        });
+      }, { threshold: [0.3, 0.6] });
+      sections.forEach(s => obs.observe(s));
+    })();
+
+    // NAVBAR logout handler - logs out on server and returns to login page
+    (function setupNavLogout() {
+      const btn = document.getElementById('navLogoutBtn');
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        try {
+          await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+        } catch (e) { /* ignore */ }
+        // redirect to login page
+        window.location.href = '/login';
+      });
+    })();
+
+   // ensure user is authenticated when opening Home, otherwise redirect to login
+   (async function ensureAuthHome() {
+     try {
+       const r = await fetch('/api/profile', { method: 'GET', credentials: 'include' });
+       if (r.status === 401) return window.location.href = '/login';
+       if (r.ok) {
+         const profile = await r.json().catch(()=>({}));
+         const name = (profile.pharmacyName || 'Admin');
+         const el = document.getElementById('profileName');
+         if (el) el.textContent = name;
+       }
+     } catch (e) {
+       console.warn('Auth check failed', e);
+       // fallback to login
+       // window.location.href = '/login';
+     }
+   })();
 
     // Set current date
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { 
@@ -571,8 +677,10 @@
         
         // Determine if medicine is expiring soon or low stock
         const expiryDate = new Date(m.expiry);
+        const today = new Date(); today.setHours(0,0,0,0);
         const thirtyDaysFromNow = new Date(Date.now() + 30*24*60*60*1000);
-        const isExpiringSoon = expiryDate < thirtyDaysFromNow;
+        const isExpired = expiryDate < today;
+        const isExpiringSoon = !isExpired && expiryDate < thirtyDaysFromNow;
         const isLowStock = m.stock < 10;
         
         tr.innerHTML = `
@@ -586,7 +694,7 @@
           <td>
             <div class="flex items-center gap-2">
               <span>${m.expiry}</span>
-              ${isExpiringSoon ? '<span class="badge badge-warning">Expiring</span>' : ''}
+              ${isExpired ? '<span class="badge badge-danger">Expired</span>' : (isExpiringSoon ? '<span class="badge badge-warning">Expiring</span>' : '')}
             </div>
           </td>
           <td>₹${m.price}</td>
@@ -600,6 +708,7 @@
               </button>
             </div>
           </td>`;
+        if (isExpired) tr.classList.add('expired-row');
         medicineTable.appendChild(tr);
       });
       tableCount.textContent = list.length;
@@ -678,115 +787,204 @@
     const billTotal = document.getElementById("billTotal");
     let billItems = [];
 
+    // Inline alert helper for billing section
+    let _billAlertTimer = null;
+    function showBillInlineMessage(message, type = 'error', timeout = 5000) {
+      const el = document.getElementById('billInlineMsg');
+      if (!el) return;
+      el.textContent = message;
+      el.className = `inline-alert show ${type === 'error' ? 'error' : ''}`;
+      if (_billAlertTimer) clearTimeout(_billAlertTimer);
+      _billAlertTimer = setTimeout(() => {
+        el.className = 'inline-alert hidden';
+      }, timeout);
+    }
+
+    // Add-to-bill handler (ensure this exists once)
     document.getElementById("addToBillBtn").addEventListener("click", () => {
-      const name = billMedicine.value;
-      const qty = parseInt(billQty.value);
+      const name = (billMedicine.value || '').trim();
+      const qty = parseInt(billQty.value, 10) || 0;
+      if (!name) { showBillInlineMessage('Please enter a medicine name', 'error'); return; }
       const med = medicines.find(m => m.name.toLowerCase() === name.toLowerCase());
-      
-      if (!med) return alert("Medicine not found");
-      if (qty <= 0) return alert("Please enter a valid quantity");
-      if (med.stock < qty) return alert(`Only ${med.stock} items available in stock`);
-      
-      // Check if already in bill
+      if (!med) { showBillInlineMessage('Medicine not found', 'error'); return; }
+      const expiryDate = new Date(med.expiry);
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (expiryDate < today) { showBillInlineMessage(`${med.name} is expired and cannot be added to the bill.`, 'error'); return; }
+      if (qty <= 0) { showBillInlineMessage('Please enter a valid quantity', 'error'); return; }
+      if (med.stock < qty) { showBillInlineMessage(`Only ${med.stock} items available in stock`, 'error'); return; }
       const existingItemIndex = billItems.findIndex(item => item.name === med.name);
-      if (existingItemIndex !== -1) {
-        billItems[existingItemIndex].qty += qty;
-      } else {
-        billItems.push({ ...med, qty });
-      }
-      
+      if (existingItemIndex !== -1) billItems[existingItemIndex].qty += qty;
+      else billItems.push({ ...med, qty });
       renderBill();
-      billMedicine.value = "";
-      billQty.value = "1";
-      billMedicine.focus();
+      billMedicine.value = ""; billQty.value = "1"; billMedicine.focus();
     });
 
-    function renderBill() {
-      billTable.innerHTML = "";
-      let subtotal = 0;
-      
-      billItems.forEach((item, index) => {
-        const rowTotal = item.qty * item.price;
-        subtotal += rowTotal;
-        billTable.innerHTML += `
-          <tr>
-            <td class="pl-6">${item.name}</td>
-            <td>
-              <div class="flex items-center">
-                <button onclick="updateQuantity(${index}, -1)" class="bg-gray-200 rounded-l px-2 py-1">-</button>
-                <span class="px-2">${item.qty}</span>
-                <button onclick="updateQuantity(${index}, 1)" class="bg-gray-200 rounded-r px-2 py-1">+</button>
-              </div>
-            </td>
-            <td>₹${item.price}</td>
-            <td>₹${rowTotal}</td>
-            <td>
-              <button onclick="removeBillItem(${index})" class="text-red-600 hover:text-red-900">
-                <i class="fas fa-trash"></i>
-              </button>
-            </td>
-          </tr>`;
-      });
-      
-      const tax = subtotal * 0.05;
-      const total = subtotal + tax;
-      
-      billSubtotal.textContent = subtotal.toFixed(2);
-      billTax.textContent = tax.toFixed(2);
-      billTotal.textContent = total.toFixed(2);
-    }
+    // Autocomplete for billing medicine input
+    (function setupBillingAutocomplete() {
+      const input = document.getElementById('billMedicine');
+      const listEl = document.getElementById('billSuggestions');
+      let matches = [];
+      let active = -1;
 
-    function updateQuantity(index, change) {
-      if (billItems[index].qty + change < 1) return;
-      billItems[index].qty += change;
-      renderBill();
-    }
-
-    function removeBillItem(index) {
-      billItems.splice(index, 1);
-      renderBill();
-    }
-
-    document.getElementById("generateBillBtn").addEventListener("click", () => {
-      // Validate customer details
-      const customerName = document.getElementById("customerName").value;
-      const customerPhone = document.getElementById("customerPhone").value;
-      
-      if (!customerName || !customerPhone) {
-        return alert("Please enter customer name and phone number");
+      function escapeHtml(s) {
+        return String(s || '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
       }
-      
-      if (billItems.length === 0) return alert("Please add items to the bill first");
-      
+
+      function render(list) {
+        if (!list || list.length === 0) {
+          listEl.innerHTML = '';
+          listEl.classList.add('hidden');
+          active = -1;
+          return;
+        }
+        listEl.innerHTML = list.map((m, i) => 
+          `<li class="suggestion-item" data-index="${i}" role="option" aria-selected="${i===active}">
+             <span>${escapeHtml(m.name)}</span><span class="text-xs text-gray-500">₹${m.price} • ${m.stock}</span>
+           </li>`
+        ).join('');
+        listEl.classList.remove('hidden');
+      }
+
+      function update(q) {
+        if (!q || q.trim().length === 0) { render([]); return; }
+        const term = q.trim().toLowerCase();
+        matches = medicines.filter(m => m.name.toLowerCase().includes(term)).slice(0, 10);
+        active = -1;
+        render(matches);
+      }
+
+      input.addEventListener('input', (e) => update(e.target.value));
+
+      input.addEventListener('keydown', (e) => {
+        const items = listEl.querySelectorAll('.suggestion-item');
+        if (listEl.classList.contains('hidden')) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          active = Math.min(active + 1, items.length - 1);
+          items.forEach((it,i)=> it.classList.toggle('active', i===active));
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          active = Math.max(active - 1, 0);
+          items.forEach((it,i)=> it.classList.toggle('active', i===active));
+        } else if (e.key === 'Enter') {
+          if (active >= 0 && items[active]) {
+            e.preventDefault();
+            select(items[active].querySelector('span').textContent);
+          }
+        } else if (e.key === 'Escape') {
+          render([]);
+        }
+      });
+
+      function select(name) {
+        input.value = name;
+        render([]);
+        billQty.focus();
+      }
+
+      listEl.addEventListener('click', (e) => {
+        const li = e.target.closest('.suggestion-item');
+        if (!li) return;
+        const idx = Number(li.dataset.index);
+        if (Number.isFinite(idx) && matches[idx]) select(matches[idx].name);
+      });
+
+      // hide suggestions on outside click
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest || (!e.target.closest('#billMedicine') && !e.target.closest('#billSuggestions'))) {
+          render([]);
+        }
+      });
+    })();
+
+    // helper: build bill metadata
+    function buildBillData() {
+      const customerName = (document.getElementById("customerName").value || '').trim();
+      const customerPhone = (document.getElementById("customerPhone").value || '').trim();
+      const customerEmail = (document.getElementById("customerEmail").value || '').trim();
+      const customerAge = (document.getElementById("customerAge").value || '').trim();
+      const customerGender = (document.getElementById("customerGender").value || '').trim();
+      const doctor = (document.getElementById("doctorName").value || '').trim();
+
+      const subtotal = parseFloat(billSubtotal.textContent) || 0;
+      const tax = parseFloat(billTax.textContent) || 0;
+      const total = parseFloat(billTotal.textContent) || 0;
+
+      return {
+        pharmacistName: 'Admin', // change if you fetch profile/pharmacist name
+        date: new Date(),
+        customer: { name: customerName, phone: customerPhone, email: customerEmail, age: customerAge, gender: customerGender, doctor },
+        items: billItems.map(it => ({ name: it.name, qty: it.qty, price: it.price })),
+        subtotal, tax, total
+      };
+    }
+
+    // helper: create/download PDF for a bill (only bill details)
+    function createAndDownloadBillPDF(billData) {
+      const doc = new jsPDF();
+      let y = 18;
+      doc.setFontSize(16);
+      doc.text(billData.pharmacistName || 'Pharmacist', 14, 14);
+      doc.setFontSize(11);
+      doc.text(`Date: ${billData.date.toLocaleString()}`, 14, y); y += 8;
+      doc.text(`Customer: ${billData.customer.name || ''}`, 14, y); y += 7;
+      doc.text(`Phone: ${billData.customer.phone || ''}`, 14, y); y += 7;
+      if (billData.customer.email) { doc.text(`Email: ${billData.customer.email}`, 14, y); y += 7; }
+      if (billData.customer.age) { doc.text(`Age: ${billData.customer.age}`, 14, y); y += 7; }
+      if (billData.customer.gender) { doc.text(`Gender: ${billData.customer.gender}`, 14, y); y += 7; }
+      if (billData.customer.doctor) { doc.text(`Doctor: ${billData.customer.doctor}`, 14, y); y += 8; }
+
+      doc.setFontSize(12);
+      doc.text('Items:', 14, y); y += 8;
+      doc.setFont('courier');
+      billData.items.forEach((it, idx) => {
+        const line = `${idx + 1}. ${it.name} x${it.qty} @ ${it.price.toFixed(2)} = ${(it.qty * it.price).toFixed(2)}`;
+        doc.text(line, 14, y);
+        y += 7;
+        if (y > 270) { doc.addPage(); y = 18; }
+      });
+      y += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Subtotal: ₹${billData.subtotal.toFixed(2)}`, 14, y); y += 7;
+      doc.text(`Tax: ₹${billData.tax.toFixed(2)}`, 14, y); y += 7;
+      doc.text(`Total: ₹${billData.total.toFixed(2)}`, 14, y);
+
+      const ts = Date.now();
+      doc.save(`bill_${ts}.pdf`);
+    }
+
+    // Generate bill: save transaction, update stock, download PDF, then reset
+    document.getElementById("exportBillBtn").addEventListener("click", () => {
+      // Validate customer details
+      const customerName = (document.getElementById("customerName").value || '').trim();
+      const customerPhone = (document.getElementById("customerPhone").value || '').trim();
+      if (!customerName || !customerPhone) {
+        showBillInlineMessage('Please enter customer name and phone number', 'error');
+        return;
+      }
+      if (billItems.length === 0) {
+        showBillInlineMessage('Please add items to the bill first', 'error');
+        return;
+      }
       // Update stock
       billItems.forEach(item => {
         const med = medicines.find(m => m.name === item.name);
-        med.stock -= item.qty;
+        if (med) med.stock -= item.qty;
       });
-      
       // Save transaction with customer details
-      const customerDetails = {
-        name: customerName,
-        phone: customerPhone,
-        email: document.getElementById("customerEmail").value,
-        age: document.getElementById("customerAge").value,
-        gender: document.getElementById("customerGender").value,
-        doctor: document.getElementById("doctorName").value
-      };
-      
-      transactions.push({ 
-        date: new Date().toLocaleString(), 
-        customer: customerDetails,
-        items: [...billItems], 
-        subtotal: parseFloat(billSubtotal.textContent),
-        tax: parseFloat(billTax.textContent),
-        total: parseFloat(billTotal.textContent),
+      const billData = buildBillData();
+      transactions.push({
+        date: billData.date.toLocaleString(),
+        customer: billData.customer,
+        items: billData.items,
+        subtotal: billData.subtotal,
+        tax: billData.tax,
+        total: billData.total,
         paymentMethod: document.getElementById("paymentMethod").value
       });
-      
-      alert(`Bill generated successfully for ₹${billTotal.textContent}`);
-      
-      // Reset form
+      // Download PDF of bill details only
+      createAndDownloadBillPDF(billData);
+      // Reset form and UI
       billItems = [];
       renderBill();
       document.getElementById("customerName").value = "";
@@ -796,22 +994,50 @@
       document.getElementById("customerGender").value = "";
       document.getElementById("doctorName").value = "";
       document.getElementById("paymentMethod").value = "cash";
-      
       renderMedicines();
     });
 
-    document.getElementById("printBillBtn").addEventListener("click", () => {
-      if (billItems.length === 0) return alert("No items in the bill to print");
-      window.print();
-    });
-    
-    document.getElementById("clearBillBtn").addEventListener("click", () => { 
-      if (billItems.length === 0) return;
-      if (confirm("Clear all items from the bill?")) {
-        billItems = []; 
-        renderBill(); 
-      }
-    });
+    // Add this renderBill function (ensures Add shows items)
+    function renderBill() {
+      billTable.innerHTML = '';
+      let subtotal = 0;
+      billItems.forEach((it, idx) => {
+        const tr = document.createElement('tr');
+        const total = (it.qty * it.price) || 0;
+        subtotal += total;
+        tr.innerHTML = `
+          <td class="pl-6 font-medium">${it.name}</td>
+          <td>${it.qty}</td>
+          <td>₹${it.price.toFixed(2)}</td>
+          <td class="pr-6">₹${total.toFixed(2)}</td>
+          <td>
+            <button class="btn btn-danger btn-sm remove-item" data-idx="${idx}"><i class="fas fa-times"></i></button>
+          </td>
+        `;
+        billTable.appendChild(tr);
+      });
+
+      // attach remove handlers
+      billTable.querySelectorAll('.remove-item').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const i = Number(btn.dataset.idx);
+          if (!Number.isNaN(i)) {
+            billItems.splice(i, 1);
+            renderBill();
+          }
+        });
+      });
+
+      // compute tax (5%)
+      const tax = +(subtotal * 0.05);
+      const total = +(subtotal + tax);
+      billSubtotal.textContent = subtotal.toFixed(2);
+      billTax.textContent = tax.toFixed(2);
+      billTotal.textContent = total.toFixed(2);
+    }
+
+    // ensure initial render
+    renderBill();
 
     // Search
     document.getElementById("searchBar").addEventListener("input", (e) => {
